@@ -63,6 +63,9 @@
                     <button onclick="switchTab('tailor')" id="tab-btn-tailor" class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-800 transition">
                         <i class="fa-solid fa-scissors mr-1.5"></i> Tailor Queue
                     </button>
+                    <button onclick="switchTab('config')" id="tab-btn-config" class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-800 transition">
+                        <i class="fa-solid fa-gear mr-1.5"></i> Config
+                    </button>
                 </nav>
 
                 <!-- Status Indicator -->
@@ -434,7 +437,7 @@
     <script>
         // Store Application State
         let state = {
-            apiUrl: 'https://script.google.com/macros/s/AKfycbwgQsSg97ZVeDXmbdRl7hVNkXffr_9UO1iR1nknQAbxinAG6JdwsgjLBsyjvkHkCEil/exec',
+            apiUrl: localStorage.getItem('ud_api_url') || 'https://script.google.com/macros/s/AKfycbwQgSsg97ZVeDXmbdR17hVNKXffr_9U01iWjL524fBsygXm3p2e81tO6o07BsyjvkHkCEil/exec',
             tasks: [],
             currentTailorFilter: 'ALL'
         };
@@ -446,7 +449,6 @@
                 updateStatusIndicator(true, "Connected to GAS");
             } else {
                 updateStatusIndicator(false, "Demo Mode (Local)");
-                loadDemoData();
             }
             refreshData();
         });
@@ -475,7 +477,7 @@
             }
         }
 
-        // Fetch Data from API or Local Demo
+        // Fetch Data from API
         async function refreshData() {
             if (state.apiUrl) {
                 try {
@@ -511,7 +513,6 @@
             document.getElementById('stat-completed').innerText = completed;
             document.getElementById('stat-credits').innerText = credits;
 
-            // Render Recent 5 Table
             const tbody = document.getElementById('dashboard-recent-table');
             tbody.innerHTML = '';
 
@@ -556,7 +557,7 @@
             });
         }
 
-        // Handle Uniform Form Submit
+        // Handle Form Submit (Fixed CORS/JSON issue using text/plain)
         async function handleCreateSubmission(e) {
             e.preventDefault();
 
@@ -579,16 +580,27 @@
                 try {
                     const res = await fetch(state.apiUrl, {
                         method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify({ action: 'createSubmission', data: payload })
                     });
-                    const result = await res.json();
+                    
+                    const textResponse = await res.text();
+                    
+                    if (textResponse.startsWith('<')) {
+                        throw new Error("Server mengembalikan HTML. Periksa URL Deployment Apps Script Anda.");
+                    }
+
+                    const result = JSON.parse(textResponse);
                     if (result.success) {
                         alert("Report logged! ID: " + result.uniqueID);
                         document.getElementById('form-new-defect').reset();
                         await refreshData();
+                    } else {
+                        alert("Gagal: " + (result.message || "Unknown error"));
                     }
                 } catch (err) {
-                    alert("Error submitting: " + err);
+                    alert("Error submitting: " + err.message);
+                    console.error("Submission detail error:", err);
                 }
             }
 
@@ -699,9 +711,7 @@
             document.getElementById('task-modal').classList.remove('flex');
         }
 
-        // =======================================================
-        // OPTIMISTIC WORKFLOW SUBMISSION (RESPONSIF 0 MS)
-        // =======================================================
+        // Optimistic UI Workflow Update
         async function handleModalSubmit(e) {
             e.preventDefault();
 
@@ -709,7 +719,7 @@
             const targetStatus = document.getElementById('modal-hidden-target-status').value;
             const tailorName = document.getElementById('active-tailor-name').value || 'Tailor Staff';
 
-            // 1. Instant Optimistic Update di UI Lokal (0 ms delay)
+            // 1. Optimistic Update Lokal (0 ms delay)
             const taskIndex = state.tasks.findIndex(t => t.uniqueID === uniqueID);
             if (taskIndex !== -1) {
                 state.tasks[taskIndex].status = targetStatus;
@@ -717,10 +727,9 @@
                 renderAllViews();
             }
 
-            // 2. Tutup Modal Secara Instan
             closeModal();
 
-            // 3. Kirim data ke Google Apps Script secara asynchronous di background
+            // 2. Background Sync ke GAS
             try {
                 let action = '';
                 let payloadData = {};
@@ -741,19 +750,25 @@
                         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify({ action: action, data: payloadData })
                     });
-                    const result = await res.json();
-                    if (!result.success) {
-                        console.error("Background sync failed:", result.message);
-                        refreshData(); // Rollback jika server gagal
+                    
+                    const textResponse = await res.text();
+                    if (!textResponse.startsWith('<')) {
+                        const result = JSON.parse(textResponse);
+                        if (!result.success) {
+                            console.error("Sync failed:", result.message);
+                            refreshData();
+                        }
+                    } else {
+                        refreshData();
                     }
                 }
             } catch (err) {
-                console.error("Network Error on Background Sync:", err);
-                refreshData(); // Sync ulang dari server jika ada kegagalan jaringan
+                console.error("Network Error on Sync:", err);
+                refreshData();
             }
         }
 
-        // Save Config API URL
+        // Save Configuration
         function saveConfig() {
             const url = document.getElementById('cfg-api-url').value.trim();
             localStorage.setItem('ud_api_url', url);
@@ -775,7 +790,7 @@
             }
         }
 
-        // Utility: Status Badge HTML Generator
+        // Utility: Status Badge Generator
         function getBadgeHtml(status) {
             if (status === 'OPEN') return `<span class="badge-open px-2.5 py-1 text-xs font-bold rounded-full">OPEN</span>`;
             if (status === 'IN_PROGRESS') return `<span class="badge-progress px-2.5 py-1 text-xs font-bold rounded-full">IN PROGRESS</span>`;
