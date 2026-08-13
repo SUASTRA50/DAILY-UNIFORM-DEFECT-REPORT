@@ -62,7 +62,7 @@
                     </button>
                     <button onclick="switchTab('tailor')" id="tab-btn-tailor" class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-800 transition">
                         <i class="fa-solid fa-scissors mr-1.5"></i> Tailor Queue
-                   
+                    </button>
                 </nav>
 
                 <!-- Status Indicator -->
@@ -102,7 +102,7 @@
                     <h2 class="text-2xl font-bold text-gray-900">Operational Dashboard</h2>
                     <p class="text-sm text-gray-500">Ringkasan aktivitas dan status perbaikan seragam hari ini.</p>
                 </div>
-                <button onclick="refreshData()" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition">
+                <button onclick="refreshData()" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition active:scale-95">
                     <i class="fa-solid fa-rotate mr-2"></i> Refresh Data
                 </button>
             </div>
@@ -169,7 +169,7 @@
         <section id="view-uniform" class="tab-content space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
-                <!-- Left Column: Form Input (MODIFIED AS REQUESTED) -->
+                <!-- Left Column: Form Input -->
                 <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-5">
                     <div class="border-b border-gray-100 pb-3">
                         <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
@@ -180,7 +180,6 @@
 
                     <form id="form-new-defect" onsubmit="handleCreateSubmission(event)" class="space-y-4">
                         
-                        <!-- 1. BARU: Uniform Staff Input (Paling Atas) -->
                         <div>
                             <label class="block text-xs font-bold uppercase text-indigo-900 mb-1">
                                 Input By (Uniform Staff Name) <span class="text-red-500">*</span>
@@ -194,7 +193,6 @@
                             </div>
                         </div>
 
-                        <!-- 2. Nama Pemilik Seragam -->
                         <div>
                             <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">
                                 Staff Name (Uniform Owner) <span class="text-red-500">*</span>
@@ -203,7 +201,6 @@
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                         </div>
 
-                        <!-- 3. BARU: Department Pemilik Seragam -->
                         <div>
                             <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">
                                 Department (Uniform Owner) <span class="text-red-500">*</span>
@@ -232,7 +229,6 @@
                             </select>
                         </div>
 
-                        <!-- 4. Uniform Item -->
                         <div>
                             <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">
                                 Uniform Item <span class="text-red-500">*</span>
@@ -248,7 +244,6 @@
                             </select>
                         </div>
 
-                        <!-- 5. Defect Type -->
                         <div>
                             <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">
                                 Defect Type <span class="text-red-500">*</span>
@@ -264,7 +259,6 @@
                             </select>
                         </div>
 
-                        <!-- Quantity & Credit Weight -->
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Quantity</label>
@@ -278,15 +272,13 @@
                             </div>
                         </div>
 
-                        <!-- Remark -->
                         <div>
                             <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Remark / Catatan</label>
                             <textarea id="inp-remarks" rows="2" placeholder="Detail posisi sobek, ukuran kancing, dll..."
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
                         </div>
 
-                        <!-- Submit Button -->
-                        <button type="submit" id="btn-submit-defect" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow transition flex items-center justify-center gap-2">
+                        <button type="submit" id="btn-submit-defect" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow transition active:scale-95 flex items-center justify-center gap-2">
                             <i class="fa-solid fa-paper-plane"></i> Submit & Generate ID
                         </button>
                     </form>
@@ -358,7 +350,7 @@
 
             <!-- Task Cards Grid -->
             <div id="tailor-task-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Task Cards will be generated dynamically -->
+                <!-- Task Cards generated dynamically -->
             </div>
         </section>
 
@@ -381,11 +373,8 @@
                     </div>
 
                     <div class="flex items-center space-x-3">
-                        <button onclick="saveConfig()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition">
+                        <button onclick="saveConfig()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition active:scale-95">
                             Save Configuration
-                        </button>
-                        <button onclick="testConnection()" class="px-5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition">
-                            Test Connection
                         </button>
                     </div>
                 </div>
@@ -432,8 +421,8 @@
                 </div>
 
                 <div class="flex justify-end space-x-2 pt-2 border-t">
-                    <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded-lg text-sm text-gray-600">Batal</button>
-                    <button type="submit" id="modal-submit-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-100">Batal</button>
+                    <button type="submit" id="modal-submit-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 active:scale-95 transition">
                         Proses Task
                     </button>
                 </div>
@@ -445,7 +434,7 @@
     <script>
         // Store Application State
         let state = {
-            apiUrl: 'https://script.google.com/macros/s/AKfycbwgQsSg97ZVeDXmbdRl7hVNkXffr_9UO1iR1nknQAbxinAG6JdwsgjLBsyjvkHkCEil/exec',
+            apiUrl: 'https://script.google.com/macros/s/AKfycbwQgSsg97ZVeDXmbdR17hVNKXffr_9U01iWjL524fBsygXm3p2e81tO6o07BsyjvkHkCEil/exec',
             tasks: [],
             currentTailorFilter: 'ALL'
         };
@@ -499,6 +488,10 @@
                     console.error("API Fetch Error:", e);
                 }
             }
+            renderAllViews();
+        }
+
+        function renderAllViews() {
             renderDashboard();
             renderUniformTable();
             renderTailorQueue();
@@ -510,7 +503,7 @@
             const open = tasks.filter(t => t.status === 'OPEN').length;
             const progress = tasks.filter(t => t.status === 'IN_PROGRESS').length;
             const completed = tasks.filter(t => t.status === 'COMPLETED').length;
-            const credits = tasks.filter(t => t.status === 'COMPLETED').reduce((acc, curr) => acc + (Number(curr.credit) || 0), 0);
+            const credits = tasks.reduce((acc, curr) => acc + (Number(curr.credit) || 0), 0);
 
             document.getElementById('stat-today').innerText = tasks.length;
             document.getElementById('stat-open').innerText = open;
@@ -522,18 +515,18 @@
             const tbody = document.getElementById('dashboard-recent-table');
             tbody.innerHTML = '';
 
-            tasks.slice(0, 5).forEach(t => {
+            tasks.slice(0, 10).forEach(t => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="py-3 px-4 font-mono font-bold text-indigo-600">${t.uniqueID}</td>
+                    <td class="py-3 px-4 font-mono font-bold text-indigo-600">${t.uniqueID || '-'}</td>
                     <td class="py-3 px-4 text-xs text-gray-500">${t.date || '-'}</td>
-                    <td class="py-3 px-4 font-medium text-gray-700">${t.reportingStaff || '-'}</td>
+                    <td class="py-3 px-4 font-medium text-gray-700">${t.reportingStaff || t.inputBy || '-'}</td>
                     <td class="py-3 px-4 text-xs">
-                        <div class="font-bold text-gray-800">${t.staff}</div>
-                        <div class="text-gray-500">${t.department}</div>
+                        <div class="font-bold text-gray-800">${t.staffName || t.staff || '-'}</div>
+                        <div class="text-gray-500">${t.department || '-'}</div>
                     </td>
                     <td class="py-3 px-4 text-xs">
-                        <span class="font-medium">${t.item}</span> - <span class="text-gray-500">${t.defect}</span>
+                        <span class="font-medium">${t.item || '-'}</span> - <span class="text-rose-500 font-medium">${t.defect || '-'}</span>
                     </td>
                     <td class="py-3 px-4">${getBadgeHtml(t.status)}</td>
                     <td class="py-3 px-4 text-xs text-gray-600">${t.tailor || '-'}</td>
@@ -550,13 +543,13 @@
             state.tasks.forEach(t => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="py-2.5 px-3 font-mono font-bold text-indigo-600 text-xs">${t.uniqueID}</td>
-                    <td class="py-2.5 px-3 text-xs font-medium text-gray-700">${t.reportingStaff || '-'}</td>
+                    <td class="py-2.5 px-3 font-mono font-bold text-indigo-600 text-xs">${t.uniqueID || '-'}</td>
+                    <td class="py-2.5 px-3 text-xs font-medium text-gray-700">${t.reportingStaff || t.inputBy || '-'}</td>
                     <td class="py-2.5 px-3 text-xs">
-                        <div class="font-bold text-gray-800">${t.staff}</div>
-                        <div class="text-gray-500">${t.department}</div>
+                        <div class="font-bold text-gray-800">${t.staffName || t.staff || '-'}</div>
+                        <div class="text-gray-500">${t.department || '-'}</div>
                     </td>
-                    <td class="py-2.5 px-3 text-xs">${t.item} (${t.defect})</td>
+                    <td class="py-2.5 px-3 text-xs">${t.item || '-'} (${t.defect || '-'})</td>
                     <td class="py-2.5 px-3">${getBadgeHtml(t.status)}</td>
                 `;
                 tbody.appendChild(tr);
@@ -569,7 +562,7 @@
 
             const payload = {
                 reportingStaff: document.getElementById('inp-reporting-staff').value,
-                staff: document.getElementById('inp-staff-name').value,
+                staffName: document.getElementById('inp-staff-name').value,
                 department: document.getElementById('inp-department').value,
                 item: document.getElementById('inp-item').value,
                 defect: document.getElementById('inp-defect').value,
@@ -580,43 +573,27 @@
 
             const btn = document.getElementById('btn-submit-defect');
             btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Submitting...`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Submitting...`;
 
             if (state.apiUrl) {
                 try {
-                    await fetch(state.apiUrl, {
+                    const res = await fetch(state.apiUrl, {
                         method: 'POST',
                         body: JSON.stringify({ action: 'createSubmission', data: payload })
                     });
+                    const result = await res.json();
+                    if (result.success) {
+                        alert("Report logged! ID: " + result.uniqueID);
+                        document.getElementById('form-new-defect').reset();
+                        await refreshData();
+                    }
                 } catch (err) {
                     alert("Error submitting: " + err);
                 }
-            } else {
-                // Local Demo Generation
-                const today = new Date();
-                const yy = today.getFullYear().toString().slice(-2);
-                const mm = String(today.getMonth() + 1).padStart(2, '0');
-                const dd = String(today.getDate()).padStart(2, '0');
-                const uniqueID = `UD-${yy}${mm}${dd}-${String(state.tasks.length + 1).padStart(4, '0')}`;
-
-                state.tasks.unshift({
-                    uniqueID: uniqueID,
-                    date: new Date().toLocaleString('id-ID'),
-                    ...payload,
-                    status: 'OPEN',
-                    tailor: ''
-                });
             }
 
             btn.disabled = false;
-            btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Submit & Generate ID`;
-
-            // Reset inputs except reporting staff
-            document.getElementById('inp-staff-name').value = '';
-            document.getElementById('inp-remarks').value = '';
-            
-            alert("Report successfully logged!");
-            refreshData();
+            btn.innerHTML = `<i class="fa-solid fa-paper-plane mr-1"></i> Submit & Generate ID`;
         }
 
         // Render Tailor Queue Grid Cards
@@ -629,25 +606,25 @@
                 : state.tasks.filter(t => t.status === state.currentTailorFilter);
 
             if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 text-sm">Tidak ada tugas pada status ini.</div>`;
+                grid.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 text-sm bg-white rounded-xl border">Tidak ada tugas pada status ini.</div>`;
                 return;
             }
 
             filtered.forEach(t => {
                 const card = document.createElement('div');
-                card.className = "bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-3 flex flex-col justify-between";
+                card.className = "bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-3 flex flex-col justify-between hover:shadow-md transition";
 
                 let actionButton = '';
                 if (t.status === 'OPEN') {
-                    actionButton = `<button onclick="openActionModal('${t.uniqueID}', 'IN_PROGRESS')" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg text-xs transition">
+                    actionButton = `<button onclick="openActionModal('${t.uniqueID}', 'IN_PROGRESS')" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg text-xs transition active:scale-95 shadow-sm">
                         <i class="fa-solid fa-play mr-1"></i> Start Task
                     </button>`;
                 } else if (t.status === 'IN_PROGRESS') {
-                    actionButton = `<button onclick="openActionModal('${t.uniqueID}', 'COMPLETED')" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg text-xs transition">
+                    actionButton = `<button onclick="openActionModal('${t.uniqueID}', 'COMPLETED')" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg text-xs transition active:scale-95 shadow-sm">
                         <i class="fa-solid fa-check mr-1"></i> Submit Completion
                     </button>`;
                 } else {
-                    actionButton = `<div class="text-center py-1 bg-emerald-50 text-emerald-700 text-xs rounded font-semibold"><i class="fa-solid fa-circle-check mr-1"></i> Completed</div>`;
+                    actionButton = `<div class="text-center py-1.5 bg-emerald-50 text-emerald-700 text-xs rounded-lg font-bold border border-emerald-100"><i class="fa-solid fa-circle-check mr-1"></i> Completed</div>`;
                 }
 
                 card.innerHTML = `
@@ -657,13 +634,13 @@
                             ${getBadgeHtml(t.status)}
                         </div>
                         <div class="border-t border-b py-2 space-y-1">
-                            <div class="text-xs text-gray-500">Penginput: <span class="font-semibold text-gray-700">${t.reportingStaff || '-'}</span></div>
-                            <div class="text-sm font-bold text-gray-800">${t.staff} <span class="text-xs font-normal text-gray-500">(${t.department})</span></div>
-                            <div class="text-xs font-medium text-indigo-900">${t.item} - ${t.defect} (${t.quantity} pcs)</div>
-                            ${t.remarks ? `<div class="text-xs italic text-gray-500 mt-1">"${t.remarks}"</div>` : ''}
+                            <div class="text-xs text-gray-500">Penginput: <span class="font-semibold text-gray-700">${t.reportingStaff || t.inputBy || '-'}</span></div>
+                            <div class="text-sm font-bold text-gray-800">${t.staffName || t.staff || '-'} <span class="text-xs font-normal text-gray-500">(${t.department || '-'})</span></div>
+                            <div class="text-xs font-medium text-indigo-900">${t.item} - ${t.defect} (${t.quantity || 1} pcs)</div>
+                            ${t.remarks ? `<div class="text-xs italic text-gray-500 mt-1 bg-gray-50 p-2 rounded border">"${t.remarks}"</div>` : ''}
                         </div>
                     </div>
-                    <div class="pt-2">
+                    <div class="pt-1">
                         ${actionButton}
                     </div>
                 `;
@@ -694,10 +671,10 @@
             document.getElementById('modal-hidden-id').value = task.uniqueID;
             document.getElementById('modal-hidden-target-status').value = targetStatus;
 
-            document.getElementById('modal-reporting-staff').innerText = task.reportingStaff || '-';
-            document.getElementById('modal-staff-dept').innerText = `${task.staff} (${task.department})`;
+            document.getElementById('modal-reporting-staff').innerText = task.reportingStaff || task.inputBy || '-';
+            document.getElementById('modal-staff-dept').innerText = `${task.staffName || task.staff || '-'} (${task.department || '-'})`;
             document.getElementById('modal-item-defect').innerText = `${task.item} - ${task.defect}`;
-            document.getElementById('modal-credit').innerText = task.credit;
+            document.getElementById('modal-credit').innerText = task.credit || 1;
             document.getElementById('modal-remarks').innerText = task.remarks || 'Tidak ada';
 
             const completionFields = document.getElementById('modal-completion-fields');
@@ -705,12 +682,12 @@
 
             if (targetStatus === 'COMPLETED') {
                 completionFields.classList.remove('hidden');
-                submitBtn.innerText = "Complete Task";
-                submitBtn.className = "px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700";
+                submitBtn.innerText = "Submit Completion";
+                submitBtn.className = "px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 active:scale-95 transition";
             } else {
                 completionFields.classList.add('hidden');
                 submitBtn.innerText = "Start Task";
-                submitBtn.className = "px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600";
+                submitBtn.className = "px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 active:scale-95 transition";
             }
 
             document.getElementById('task-modal').classList.remove('hidden');
@@ -722,39 +699,58 @@
             document.getElementById('task-modal').classList.remove('flex');
         }
 
+        // =======================================================
+        // OPTIMISTIC WORKFLOW SUBMISSION (RESPONSIF 0 MS)
+        // =======================================================
         async function handleModalSubmit(e) {
             e.preventDefault();
+
             const uniqueID = document.getElementById('modal-hidden-id').value;
             const targetStatus = document.getElementById('modal-hidden-target-status').value;
-            const tailorName = document.getElementById('active-tailor-name').value;
+            const tailorName = document.getElementById('active-tailor-name').value || 'Tailor Staff';
 
-            if (targetStatus === 'IN_PROGRESS') {
-                if (state.apiUrl) {
-                    await fetch(state.apiUrl, {
-                        method: 'POST',
-                        body: JSON.stringify({ action: 'updateTaskStatus', data: { uniqueID, tailor: tailorName } })
-                    });
-                } else {
-                    const t = state.tasks.find(t => t.uniqueID === uniqueID);
-                    if (t) { t.status = 'IN_PROGRESS'; t.tailor = tailorName; }
-                }
-            } else if (targetStatus === 'COMPLETED') {
-                const repairResult = document.getElementById('modal-repair-result').value;
-                const tailorRemarks = document.getElementById('modal-tailor-remarks').value;
-
-                if (state.apiUrl) {
-                    await fetch(state.apiUrl, {
-                        method: 'POST',
-                        body: JSON.stringify({ action: 'submitCompletion', data: { uniqueID, repairResult, remarks: tailorRemarks } })
-                    });
-                } else {
-                    const t = state.tasks.find(t => t.uniqueID === uniqueID);
-                    if (t) { t.status = 'COMPLETED'; }
-                }
+            // 1. Instant Optimistic Update di UI Lokal (0 ms delay)
+            const taskIndex = state.tasks.findIndex(t => t.uniqueID === uniqueID);
+            if (taskIndex !== -1) {
+                state.tasks[taskIndex].status = targetStatus;
+                state.tasks[taskIndex].tailor = tailorName;
+                renderAllViews();
             }
 
+            // 2. Tutup Modal Secara Instan
             closeModal();
-            refreshData();
+
+            // 3. Kirim data ke Google Apps Script secara asynchronous di background
+            try {
+                let action = '';
+                let payloadData = {};
+
+                if (targetStatus === 'IN_PROGRESS') {
+                    action = 'updateTaskStatus';
+                    payloadData = { uniqueID: uniqueID, tailor: tailorName };
+                } else if (targetStatus === 'COMPLETED') {
+                    action = 'submitCompletion';
+                    const repairResult = document.getElementById('modal-repair-result').value;
+                    const tailorRemarks = document.getElementById('modal-tailor-remarks').value;
+                    payloadData = { uniqueID: uniqueID, repairResult: repairResult, remarks: tailorRemarks };
+                }
+
+                if (state.apiUrl) {
+                    const res = await fetch(state.apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ action: action, data: payloadData })
+                    });
+                    const result = await res.json();
+                    if (!result.success) {
+                        console.error("Background sync failed:", result.message);
+                        refreshData(); // Rollback jika server gagal
+                    }
+                }
+            } catch (err) {
+                console.error("Network Error on Background Sync:", err);
+                refreshData(); // Sync ulang dari server jika ada kegagalan jaringan
+            }
         }
 
         // Save Config API URL
@@ -787,38 +783,13 @@
             return `<span class="bg-gray-100 text-gray-600 px-2.5 py-1 text-xs font-bold rounded-full">${status}</span>`;
         }
 
-        // Demo Initial Data
-        function loadDemoData() {
-            state.tasks = [
-                {
-                    uniqueID: 'UD-260813-0001',
-                    date: '13/08/2026 08:30',
-                    reportingStaff: 'Siti Rahma',
-                    staff: 'Budi Santoso',
-                    department: 'Front Office',
-                    item: 'Jas / Blazer',
-                    defect: 'Kancing Lepas / Hilang',
-                    quantity: 1,
-                    credit: 1,
-                    status: 'OPEN',
-                    tailor: '',
-                    remarks: 'Kancing jas depan urutan kedua hilang'
-                },
-                {
-                    uniqueID: 'UD-260813-0002',
-                    date: '13/08/2026 09:15',
-                    reportingStaff: 'Ahmad Ridwan',
-                    staff: 'Dewi Lestari',
-                    department: 'Food & Beverage',
-                    item: 'Gaun / Dress',
-                    defect: 'Resleting Rusak / Macet',
-                    quantity: 1,
-                    credit: 2,
-                    status: 'IN_PROGRESS',
-                    tailor: 'Pak Joko',
-                    remarks: 'Resleting belakang macet total'
-                }
-            ];
+        function filterUniformTable() {
+            const term = document.getElementById('search-uniform-log').value.toLowerCase();
+            const rows = document.querySelectorAll('#uniform-submissions-table tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
         }
     </script>
 </body>
