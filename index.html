@@ -3,274 +3,312 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Uniform Defect System</title>
+    <title>Daily Uniform Defect Management</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
         }
-        .status-badge-OPEN { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
-        .status-badge-IN_PROGRESS { background-color: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
-        .status-badge-COMPLETED { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
-        .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 600; }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .badge-open {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+        .badge-progress {
+            background-color: #dbeafe;
+            color: #2563eb;
+        }
+        .badge-completed {
+            background-color: #d1fae5;
+            color: #059669;
+        }
     </style>
 </head>
-<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+<body class="text-gray-800">
 
-    <!-- TOP NAVBAR -->
-    <header class="bg-slate-900 text-white sticky top-0 z-40 shadow-md">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="bg-blue-600 p-2 rounded-lg text-white">
-                    <i class="fa-solid fa-shirt text-xl"></i>
+    <!-- Top Navigation Header -->
+    <header class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-indigo-600 p-2 rounded-lg">
+                        <i class="fa-solid font-bold text-xl fa-shirt"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight">Daily Uniform Defect</h1>
+                        <p class="text-xs text-indigo-200">System Lifecycle & Task Queue</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="font-bold text-lg leading-tight">UNIFORM DEFECT SYSTEM</h1>
-                    <p class="text-xs text-slate-400">Single Lifecycle Management</p>
+
+                <!-- Navigation Tabs -->
+                <nav class="hidden md:flex space-x-1">
+                    <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-800 transition bg-indigo-800">
+                        <i class="fa-solid fa-chart-pie mr-1.5"></i> Dashboard
+                    </button>
+                    <button onclick="switchTab('uniform')" id="tab-btn-uniform" class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-800 transition">
+                        <i class="fa-solid fa-file-pen mr-1.5"></i> Uniform Module
+                    </button>
+                    <button onclick="switchTab('tailor')" id="tab-btn-tailor" class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-800 transition">
+                        <i class="fa-solid fa-scissors mr-1.5"></i> Tailor Queue
+                    </button>
+                    <button onclick="switchTab('config')" id="tab-btn-config" class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-800 transition">
+                        <i class="fa-solid fa-gear mr-1.5"></i> API Config
+                    </button>
+                </nav>
+
+                <!-- Status Indicator -->
+                <div class="flex items-center space-x-2 text-xs bg-indigo-950 px-3 py-1.5 rounded-full border border-indigo-700">
+                    <span id="api-status-ping" class="h-2 w-2 rounded-full bg-yellow-400"></span>
+                    <span id="api-status-text" class="text-gray-300">Local / Demo Mode</span>
                 </div>
             </div>
+        </div>
 
-            <!-- Role Switcher & API Status -->
-            <div class="flex items-center space-x-4">
-                <div id="apiStatusBadge" class="hidden sm:flex items-center space-x-1.5 text-xs bg-slate-800 text-amber-400 px-3 py-1.5 rounded-full border border-slate-700">
-                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                    <span id="apiStatusText">Demo Mode (Local Data)</span>
-                </div>
-
-                <div class="flex items-center bg-slate-800 p-1 rounded-xl border border-slate-700">
-                    <button onclick="setRole('UNIFORM')" id="btnRoleUniform" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200">
-                        <i class="fa-solid fa-user-check mr-1"></i> Uniform Staff
-                    </button>
-                    <button onclick="setRole('TAILOR')" id="btnRoleTailor" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200">
-                        <i class="fa-solid fa-scissors mr-1"></i> Tailor
-                    </button>
-                    <button onclick="setRole('MANAGER')" id="btnRoleManager" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200">
-                        <i class="fa-solid fa-chart-pie mr-1"></i> Report
-                    </button>
-                </div>
-            </div>
+        <!-- Mobile Navigation -->
+        <div class="md:hidden bg-indigo-950 px-2 pt-2 pb-3 space-y-1 flex justify-around text-xs border-t border-indigo-800">
+            <button onclick="switchTab('dashboard')" class="text-center p-1">
+                <i class="fa-solid fa-chart-pie block text-base mb-0.5"></i> Dashboard
+            </button>
+            <button onclick="switchTab('uniform')" class="text-center p-1">
+                <i class="fa-solid fa-file-pen block text-base mb-0.5"></i> Uniform
+            </button>
+            <button onclick="switchTab('tailor')" class="text-center p-1">
+                <i class="fa-solid fa-scissors block text-base mb-0.5"></i> Tailor
+            </button>
+            <button onclick="switchTab('config')" class="text-center p-1">
+                <i class="fa-solid fa-gear block text-base mb-0.5"></i> Config
+            </button>
         </div>
     </header>
 
-    <!-- SUB-NAVBAR / MAIN TABS -->
-    <nav class="bg-white border-b border-slate-200 shadow-sm sticky top-16 z-30">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-8 text-sm font-medium text-slate-600">
-            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="py-4 tab-active flex items-center space-x-2">
-                <i class="fa-solid fa-gauge-high"></i> <span>Dashboard</span>
-            </button>
-            <button onclick="switchTab('uniform-module')" id="nav-uniform-module" class="py-4 flex items-center space-x-2">
-                <i class="fa-solid fa-circle-plus"></i> <span>Uniform Module</span>
-            </button>
-            <button onclick="switchTab('tailor-module')" id="nav-tailor-module" class="py-4 flex items-center space-x-2">
-                <i class="fa-solid fa-list-check"></i> <span>Tailor Task Queue</span>
-                <span id="badgeOpenCount" class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full font-bold ml-1">0</span>
-            </button>
-            <button onclick="switchTab('reports')" id="nav-reports" class="py-4 flex items-center space-x-2">
-                <i class="fa-solid fa-chart-line"></i> <span>Analytics & Reports</span>
-            </button>
-            <button onclick="switchTab('settings')" id="nav-settings" class="py-4 flex items-center space-x-2 ml-auto text-slate-400 hover:text-slate-600">
-                <i class="fa-solid fa-gear"></i> <span>API Config</span>
-            </button>
-        </div>
-    </nav>
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-    <!-- MAIN CONTENT CONTAINER -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
-
-        <!-- ==================== 1. DASHBOARD VIEW ==================== -->
-        <section id="view-dashboard" class="space-y-6">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <!-- ======================================================= -->
+        <!-- 1. DASHBOARD VIEW -->
+        <!-- ======================================================= -->
+        <section id="view-dashboard" class="tab-content active space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-900">Defect Overview Today</h2>
-                    <p class="text-sm text-slate-500">Real-time status monitoring & workload distribution</p>
+                    <h2 class="text-2xl font-bold text-gray-900">Operational Dashboard</h2>
+                    <p class="text-sm text-gray-500">Ringkasan aktivitas dan status perbaikan seragam hari ini.</p>
                 </div>
-                <div class="flex items-center space-x-3">
-                    <button onclick="refreshData()" class="inline-flex items-center px-4 py-2 bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition">
-                        <i class="fa-solid fa-rotate mr-2 text-slate-400"></i> Sync Data
-                    </button>
-                    <button onclick="switchTab('uniform-module')" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-sm transition">
-                        <i class="fa-solid fa-plus mr-2"></i> Report New Defect
-                    </button>
-                </div>
+                <button onclick="refreshData()" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition">
+                    <i class="fa-solid fa-rotate mr-2"></i> Refresh Data
+                </button>
             </div>
 
-            <!-- METRIC CARDS -->
+            <!-- Metric Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                    <div class="flex items-center justify-between text-slate-500 mb-2">
-                        <span class="text-xs font-semibold uppercase tracking-wider">Today's Defect</span>
-                        <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
-                    </div>
-                    <div id="statTotalToday" class="text-3xl font-extrabold text-slate-900">0</div>
-                    <p class="text-xs text-slate-400 mt-1">Submitted today</p>
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                    <div class="text-xs font-semibold uppercase text-gray-400">Today's Defects</div>
+                    <div class="text-2xl font-bold text-gray-800 mt-1" id="stat-today">0</div>
+                    <div class="text-xs text-gray-500 mt-2"><i class="fa-regular fa-clock mr-1"></i> Total Laporan Hari Ini</div>
                 </div>
-
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-amber-400">
-                    <div class="flex items-center justify-between text-slate-500 mb-2">
-                        <span class="text-xs font-semibold uppercase tracking-wider">Open Tasks</span>
-                        <i class="fa-solid fa-clock text-amber-500"></i>
-                    </div>
-                    <div id="statOpen" class="text-3xl font-extrabold text-amber-600">0</div>
-                    <p class="text-xs text-slate-400 mt-1">Waiting for tailor</p>
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm border-l-4 border-l-amber-500">
+                    <div class="text-xs font-semibold uppercase text-amber-600">Open Tasks</div>
+                    <div class="text-2xl font-bold text-amber-600 mt-1" id="stat-open">0</div>
+                    <div class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-hourglass-start mr-1"></i> Menunggu Tailor</div>
                 </div>
-
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-blue-500">
-                    <div class="flex items-center justify-between text-slate-500 mb-2">
-                        <span class="text-xs font-semibold uppercase tracking-wider">In Progress</span>
-                        <i class="fa-solid fa-spinner text-blue-500 animate-spin"></i>
-                    </div>
-                    <div id="statInProgress" class="text-3xl font-extrabold text-blue-600">0</div>
-                    <p class="text-xs text-slate-400 mt-1">Currently repairing</p>
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm border-l-4 border-l-blue-500">
+                    <div class="text-xs font-semibold uppercase text-blue-600">In Progress</div>
+                    <div class="text-2xl font-bold text-blue-600 mt-1" id="stat-progress">0</div>
+                    <div class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-spinner mr-1"></i> Dalam Pengerjaan</div>
                 </div>
-
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-500">
-                    <div class="flex items-center justify-between text-slate-500 mb-2">
-                        <span class="text-xs font-semibold uppercase tracking-wider">Completed</span>
-                        <i class="fa-solid fa-circle-check text-emerald-500"></i>
-                    </div>
-                    <div id="statCompleted" class="text-3xl font-extrabold text-emerald-600">0</div>
-                    <p class="text-xs text-slate-400 mt-1">Finished defects</p>
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm border-l-4 border-l-emerald-500">
+                    <div class="text-xs font-semibold uppercase text-emerald-600">Completed</div>
+                    <div class="text-2xl font-bold text-emerald-600 mt-1" id="stat-completed">0</div>
+                    <div class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-check-double mr-1"></i> Selesai Diperbaiki</div>
                 </div>
-
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                    <div class="flex items-center justify-between text-slate-500 mb-2">
-                        <span class="text-xs font-semibold uppercase tracking-wider">Completed Credits</span>
-                        <i class="fa-solid fa-award text-purple-500"></i>
-                    </div>
-                    <div id="statCredits" class="text-3xl font-extrabold text-purple-600">0</div>
-                    <p class="text-xs text-slate-400 mt-1">Total credit points</p>
+                <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm border-l-4 border-l-purple-500">
+                    <div class="text-xs font-semibold uppercase text-purple-600">Total Credits</div>
+                    <div class="text-2xl font-bold text-purple-600 mt-1" id="stat-credits">0</div>
+                    <div class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-award mr-1"></i> Total Bobot Kredit Kerja</div>
                 </div>
             </div>
 
-            <!-- RECENT SUBMISSIONS TABLE -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                    <h3 class="font-bold text-slate-900">Recent Lifecycle Activity</h3>
-                    <span class="text-xs text-slate-400">Live feed of all Unique IDs</span>
+            <!-- Recent Submissions Table -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h3 class="font-bold text-gray-800 text-base">Aktivitas Terkini (Recent Lifecycle)</h3>
+                    <span class="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">Real-time Sheet Sync</span>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-slate-100">
-                                <th class="px-6 py-3">Unique ID</th>
-                                <th class="px-6 py-3">Item / Defect</th>
-                                <th class="px-6 py-3">Staff</th>
-                                <th class="px-6 py-3">Tailor</th>
-                                <th class="px-6 py-3">Status</th>
-                                <th class="px-6 py-3 text-right">Action</th>
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold border-b">
+                            <tr>
+                                <th class="py-3 px-4">Unique ID</th>
+                                <th class="py-3 px-4">Tanggal / Waktu</th>
+                                <th class="py-3 px-4">Penginput (Uniform)</th>
+                                <th class="py-3 px-4">Pemilik & Dept</th>
+                                <th class="py-3 px-4">Item / Defect</th>
+                                <th class="py-3 px-4">Status</th>
+                                <th class="py-3 px-4">Tailor</th>
                             </tr>
                         </thead>
-                        <tbody id="dashboardTableBody" class="divide-y divide-slate-100 text-sm">
-                            <!-- Populated dynamically -->
+                        <tbody id="dashboard-recent-table" class="divide-y divide-gray-100">
+                            <!-- Populated via JS -->
                         </tbody>
                     </table>
                 </div>
             </div>
         </section>
 
-
-        <!-- ==================== 2. UNIFORM MODULE ==================== -->
-        <section id="view-uniform-module" class="hidden space-y-8">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- ======================================================= -->
+        <!-- 2. UNIFORM MODULE VIEW (REPORT NEW DEFECT & SUBMISSIONS) -->
+        <!-- ======================================================= -->
+        <section id="view-uniform" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
-                <!-- NEW DEFECT FORM -->
-                <div class="lg:col-span-1 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                    <div class="border-b border-slate-100 pb-3">
-                        <h3 class="font-bold text-lg text-slate-900 flex items-center">
-                            <i class="fa-solid fa-pen-to-square text-blue-600 mr-2"></i> Report New Defect
+                <!-- Left Column: Form Input (MODIFIED AS REQUESTED) -->
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-5">
+                    <div class="border-b border-gray-100 pb-3">
+                        <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                            <i class="fa-solid fa-pen-to-square text-indigo-600"></i> Report New Defect
                         </h3>
-                        <p class="text-xs text-slate-500">Uniform staff entry form</p>
+                        <p class="text-xs text-gray-500">Uniform staff entry form</p>
                     </div>
 
-                    <form id="defectForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                    <form id="form-new-defect" onsubmit="handleCreateSubmission(event)" class="space-y-4">
+                        
+                        <!-- 1. BARU: Uniform Staff Input (Paling Atas) -->
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Staff Name</label>
-                            <input type="text" id="inputStaff" required placeholder="e.g. Budi Santoso" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <label class="block text-xs font-bold uppercase text-indigo-900 mb-1">
+                                Input By (Uniform Staff Name) <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                                    <i class="fa-solid fa-id-badge"></i>
+                                </span>
+                                <input type="text" id="inp-reporting-staff" required placeholder="Nama Petugas Uniform yang menginput"
+                                    class="w-full pl-9 pr-3 py-2 bg-indigo-50 border border-indigo-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none">
+                            </div>
                         </div>
 
+                        <!-- 2. Nama Pemilik Seragam -->
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Uniform Item</label>
-                            <select id="inputItem" required class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                <option value="">-- Select Item --</option>
-                                <option value="Kemeja Staff">Kemeja Staff</option>
-                                <option value="Celana Kerja">Celana Kerja</option>
+                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">
+                                Staff Name (Pemilik Seragam) <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" id="inp-staff-name" required placeholder="e.g. Budi Santoso"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+
+                        <!-- 3. BARU: Department Pemilik Seragam -->
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">
+                                Department (Pemilik Seragam) <span class="text-red-500">*</span>
+                            </label>
+                            <select id="inp-department" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                                <option value="">-- Pilih Departemen --</option>
+                                <option value="Front Office">Front Office</option>
+                                <option value="Housekeeping">Housekeeping</option>
+                                <option value="Food & Beverage">Food & Beverage</option>
+                                <option value="Kitchen / Culinary">Kitchen / Culinary</option>
+                                <option value="Engineering">Engineering</option>
+                                <option value="Security">Security</option>
+                                <option value="Laundry">Laundry</option>
+                                <option value="Sales & Executive">Sales & Executive</option>
+                                <option value="Other">Lain-lain</option>
+                            </select>
+                        </div>
+
+                        <!-- 4. Uniform Item -->
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">
+                                Uniform Item <span class="text-red-500">*</span>
+                            </label>
+                            <select id="inp-item" required onchange="autoFillCredit()" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                                <option value="">-- Pilih Jenis Seragam --</option>
+                                <option value="Kemeja / Shirt">Kemeja / Shirt</option>
+                                <option value="Celana / Trousers">Celana / Trousers</option>
                                 <option value="Jas / Blazer">Jas / Blazer</option>
+                                <option value="Gaun / Dress">Gaun / Dress</option>
                                 <option value="Apron / Celemek">Apron / Celemek</option>
-                                <option value="Rompi / Vest">Rompi / Vest</option>
+                                <option value="Lainnya">Lainnya</option>
                             </select>
                         </div>
 
+                        <!-- 5. Defect Type -->
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Defect Type</label>
-                            <select id="inputDefect" required onchange="autoSetCredit()" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                <option value="">-- Select Defect --</option>
-                                <option value="Jahitan Lepas">Jahitan Lepas (1 Credit)</option>
-                                <option value="Kancing Lepas/Hilang">Kancing Lepas/Hilang (1 Credit)</option>
-                                <option value="Resleting Rusak">Resleting Rusak (2 Credit)</option>
-                                <option value="Kain Sobek">Kain Sobek (3 Credit)</option>
-                                <option value="Permak Ukuran">Permak Ukuran (2 Credit)</option>
+                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">
+                                Defect Type <span class="text-red-500">*</span>
+                            </label>
+                            <select id="inp-defect" required onchange="autoFillCredit()" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                                <option value="">-- Pilih Jenis Kerusakan --</option>
+                                <option value="Kancing Lepas / Hilang">Kancing Lepas / Hilang</option>
+                                <option value="Sobek Jahitan">Sobek Jahitan</option>
+                                <option value="Resleting Rusak / Macet">Resleting Rusak / Macet</option>
+                                <option value="Kain Sobek / Permakan">Kain Sobek / Permakan</option>
+                                <option value="Potong / Alterasi Panjang">Potong / Alterasi Panjang</option>
+                                <option value="Lainnya">Lainnya</option>
                             </select>
                         </div>
 
+                        <!-- Quantity & Credit Weight -->
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Quantity</label>
-                                <input type="number" id="inputQuantity" min="1" value="1" required class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Quantity</label>
+                                <input type="number" id="inp-quantity" min="1" value="1" required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Credit Weight</label>
-                                <input type="number" id="inputCredit" min="1" value="1" readonly class="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-xl text-sm font-bold text-purple-700">
+                                <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Credit Weight</label>
+                                <input type="number" id="inp-credit" min="1" value="1" readonly
+                                    class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm font-bold text-indigo-700 outline-none">
                             </div>
                         </div>
 
+                        <!-- Remark -->
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Remark / Catatan</label>
-                            <textarea id="inputRemark" rows="3" placeholder="Detail posisi sobek, ukuran kancing, dll..." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Remark / Catatan</label>
+                            <textarea id="inp-remarks" rows="2" placeholder="Detail posisi sobek, ukuran kancing, dll..."
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
                         </div>
 
-                        <button type="submit" id="btnSubmitDefect" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition duration-200 flex items-center justify-center space-x-2">
-                            <i class="fa-solid fa-paper-plane"></i>
-                            <span>Submit & Generate ID</span>
+                        <!-- Submit Button -->
+                        <button type="submit" id="btn-submit-defect" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i> Submit & Generate ID
                         </button>
                     </form>
                 </div>
 
-                <!-- MY SUBMISSIONS TABLE -->
-                <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <!-- Right Column: My Submissions History -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-4">
+                    <div class="flex justify-between items-center border-b border-gray-100 pb-3">
                         <div>
-                            <h3 class="font-bold text-lg text-slate-900">My Submissions Log</h3>
-                            <p class="text-xs text-slate-500">Track lifecycle of submitted uniform defects</p>
+                            <h3 class="text-lg font-bold text-gray-800">My Submissions Log</h3>
+                            <p class="text-xs text-gray-500">Daftar laporan defect yang telah disubmit</p>
                         </div>
-                        <div class="relative">
-                            <input type="text" id="searchSubmission" oninput="renderMySubmissions()" placeholder="Search ID or Item..." class="pl-8 pr-3 py-1.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                            <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
-                        </div>
+                        <input type="text" id="search-uniform-log" onkeyup="filterUniformTable()" placeholder="Cari ID / Nama / Dept..."
+                            class="px-3 py-1.5 border border-gray-300 rounded-lg text-xs outline-none focus:ring-1 focus:ring-indigo-500">
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-slate-100">
-                                    <th class="px-4 py-3">Unique ID</th>
-                                    <th class="px-4 py-3">Date</th>
-                                    <th class="px-4 py-3">Item & Defect</th>
-                                    <th class="px-4 py-3">Qty / Credit</th>
-                                    <th class="px-4 py-3">Status</th>
-                                    <th class="px-4 py-3">Detail</th>
+                    <div class="overflow-x-auto max-h-[500px]">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold sticky top-0">
+                                <tr>
+                                    <th class="py-2.5 px-3">Unique ID</th>
+                                    <th class="py-2.5 px-3">Penginput</th>
+                                    <th class="py-2.5 px-3">Pemilik & Dept</th>
+                                    <th class="py-2.5 px-3">Item & Defect</th>
+                                    <th class="py-2.5 px-3">Status</th>
                                 </tr>
                             </thead>
-                            <tbody id="mySubmissionsTableBody" class="divide-y divide-slate-100 text-sm">
-                                <!-- Populated dynamically -->
+                            <tbody id="uniform-submissions-table" class="divide-y divide-gray-100">
+                                <!-- Populated via JS -->
                             </tbody>
                         </table>
                     </div>
@@ -279,87 +317,69 @@
             </div>
         </section>
 
-
-        <!-- ==================== 3. TAILOR MODULE ==================== -->
-        <section id="view-tailor-module" class="hidden space-y-6">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <!-- ======================================================= -->
+        <!-- 3. TAILOR MODULE VIEW (TASK QUEUE & WORKFLOW) -->
+        <!-- ======================================================= -->
+        <section id="view-tailor" class="tab-content space-y-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-900">Tailor Task Queue</h2>
-                    <p class="text-sm text-slate-500">Select open tasks, start repair, and submit completion</p>
+                    <h2 class="text-xl font-bold text-gray-900">Tailor Workstation & Task Queue</h2>
+                    <p class="text-xs text-gray-500">Kelola dan selesaikan tugas perbaikan pakaian seragam.</p>
                 </div>
-
-                <!-- FILTER TABS FOR TAILOR -->
-                <div class="flex bg-slate-200 p-1 rounded-xl text-xs font-semibold">
-                    <button onclick="setTailorFilter('ALL')" id="filterTailorALL" class="px-3 py-1.5 rounded-lg bg-white shadow-sm text-slate-800">All</button>
-                    <button onclick="setTailorFilter('OPEN')" id="filterTailorOPEN" class="px-3 py-1.5 rounded-lg text-slate-600">Open</button>
-                    <button onclick="setTailorFilter('IN_PROGRESS')" id="filterTailorIN_PROGRESS" class="px-3 py-1.5 rounded-lg text-slate-600">In Progress</button>
-                    <button onclick="setTailorFilter('COMPLETED')" id="filterTailorCOMPLETED" class="px-3 py-1.5 rounded-lg text-slate-600">Completed</button>
+                <div class="flex items-center gap-3">
+                    <label class="text-xs font-semibold text-gray-600">Active Tailor Name:</label>
+                    <input type="text" id="active-tailor-name" value="Tailor Staff" 
+                        class="px-3 py-1.5 border border-indigo-300 rounded-lg text-sm font-semibold text-indigo-900 bg-indigo-50 focus:bg-white outline-none">
                 </div>
             </div>
 
-            <!-- TASK GRID -->
-            <div id="tailorTaskGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Task Cards render here -->
+            <!-- Task Status Tabs Filter -->
+            <div class="flex space-x-2 border-b border-gray-200 pb-2">
+                <button onclick="filterTailorQueue('ALL')" id="tailor-filter-ALL" class="tailor-filter-btn px-4 py-2 rounded-lg text-xs font-bold bg-indigo-600 text-white">
+                    All Tasks
+                </button>
+                <button onclick="filterTailorQueue('OPEN')" id="tailor-filter-OPEN" class="tailor-filter-btn px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200">
+                    OPEN (Queue)
+                </button>
+                <button onclick="filterTailorQueue('IN_PROGRESS')" id="tailor-filter-IN_PROGRESS" class="tailor-filter-btn px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200">
+                    IN PROGRESS
+                </button>
+                <button onclick="filterTailorQueue('COMPLETED')" id="tailor-filter-COMPLETED" class="tailor-filter-btn px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200">
+                    COMPLETED
+                </button>
             </div>
-        </section>
 
-
-        <!-- ==================== 4. REPORTS VIEW ==================== -->
-        <section id="view-reports" class="hidden space-y-6">
-            <div>
-                <h2 class="text-2xl font-bold text-slate-900">Analytics & Performance Report</h2>
-                <p class="text-sm text-slate-500">Uniform defect volume, tailor workload & productivity breakdown</p>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Tailor Productivity Table -->
-                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                    <h3 class="font-bold text-slate-900 flex items-center">
-                        <i class="fa-solid fa-user-gear text-purple-600 mr-2"></i> Tailor Productivity Summary
-                    </h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-slate-100">
-                                    <th class="px-4 py-2">Tailor Name</th>
-                                    <th class="px-4 py-2 text-center">Completed Tasks</th>
-                                    <th class="px-4 py-2 text-center">Total Credits</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tailorProductivityBody" class="divide-y divide-slate-100 text-sm">
-                                <!-- Dynamic -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Defect Type Distribution -->
-                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                    <h3 class="font-bold text-slate-900 flex items-center">
-                        <i class="fa-solid fa-chart-bar text-blue-600 mr-2"></i> Defect Volume Breakdown
-                    </h3>
-                    <div id="defectVolumeBars" class="space-y-3 pt-2">
-                        <!-- Dynamic Progress Bars -->
-                    </div>
-                </div>
+            <!-- Task Cards Grid -->
+            <div id="tailor-task-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Task Cards will be generated dynamically -->
             </div>
         </section>
 
+        <!-- ======================================================= -->
+        <!-- 4. CONFIGURATION VIEW -->
+        <!-- ======================================================= -->
+        <section id="view-config" class="tab-content space-y-6">
+            <div class="max-w-2xl mx-auto bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-5">
+                <div class="border-b border-gray-100 pb-3">
+                    <h3 class="text-lg font-bold text-gray-800">Google Apps Script Web App Integration</h3>
+                    <p class="text-xs text-gray-500">Koneksikan aplikasi HTML ini dengan Google Sheet Anda.</p>
+                </div>
 
-        <!-- ==================== 5. CONFIG/SETTINGS VIEW ==================== -->
-        <section id="view-settings" class="hidden space-y-6 max-w-2xl mx-auto">
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                <h3 class="font-bold text-lg text-slate-900 flex items-center">
-                    <i class="fa-solid fa-link text-slate-600 mr-2"></i> Google Apps Script Integration
-                </h3>
-                <p class="text-xs text-slate-500">Masukkan Web App Exec URL yang Anda dapatkan dari Google Apps Script untuk menghubungkan aplikasi HTML ini dengan Google Sheets database Anda.</p>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-700 mb-1">Apps Script Web App Exec URL</label>
+                        <input type="text" id="cfg-api-url" placeholder="https://script.google.com/macros/s/.../exec"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-xs">
+                        <p class="text-xs text-gray-400 mt-1">Pastikan Web App di-deploy dengan akses <b>"Anyone"</b>.</p>
+                    </div>
 
-                <div class="space-y-3">
-                    <label class="block text-xs font-bold text-slate-700 uppercase">Apps Script Web App URL</label>
-                    <input type="url" id="configApiUrl" placeholder="https://script.google.com/macros/s/AKfycb.../exec" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    <div class="flex items-center space-x-2 pt-2">
-                        <button onclick="saveApiConfig()" class="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition">Save & Connect</button>
-                        <button onclick="clearApiConfig()" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-200 transition">Reset to Demo Mode</button>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="saveConfig()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition">
+                            Save Configuration
+                        </button>
+                        <button onclick="testConnection()" class="px-5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition">
+                            Test Connection
+                        </button>
                     </div>
                 </div>
             </div>
@@ -367,531 +387,431 @@
 
     </main>
 
-
-    <!-- ==================== TASK DETAIL / ACTION MODAL ==================== -->
-    <div id="taskModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in duration-200">
-            <div class="flex justify-between items-start border-b border-slate-100 pb-3">
-                <div>
-                    <span id="modalUniqueID" class="text-xs font-mono font-bold bg-slate-100 px-2 py-1 rounded text-slate-600">UD-000000-0000</span>
-                    <h3 id="modalItemTitle" class="text-lg font-bold text-slate-900 mt-1">Item Title</h3>
-                </div>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <!-- Tailor Task Action Modal -->
+    <div id="task-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-gray-800 text-lg" id="modal-task-id">UD-000000-0000</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
 
-            <div class="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-3 rounded-xl">
-                <div><span class="text-slate-400">Staff:</span> <strong id="modalStaff" class="text-slate-700"></strong></div>
-                <div><span class="text-slate-400">Status:</span> <strong id="modalStatus" class="text-slate-700"></strong></div>
-                <div><span class="text-slate-400">Defect:</span> <strong id="modalDefect" class="text-slate-700"></strong></div>
-                <div><span class="text-slate-400">Credit:</span> <strong id="modalCredit" class="text-slate-700"></strong></div>
-                <div><span class="text-slate-400">Tailor:</span> <strong id="modalTailor" class="text-slate-700"></strong></div>
-                <div><span class="text-slate-400">Started:</span> <strong id="modalStartTime" class="text-slate-700"></strong></div>
+            <div class="space-y-2 text-sm bg-gray-50 p-3 rounded-lg border">
+                <p><strong>Penginput (Uniform):</strong> <span id="modal-reporting-staff">-</span></p>
+                <p><strong>Pemilik & Dept:</strong> <span id="modal-staff-dept">-</span></p>
+                <p><strong>Item / Defect:</strong> <span id="modal-item-defect">-</span></p>
+                <p><strong>Credit Weight:</strong> <span id="modal-credit" class="font-bold text-indigo-600">1</span></p>
+                <p><strong>Remark Masuk:</strong> <span id="modal-remarks" class="italic text-gray-600">-</span></p>
             </div>
 
-            <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Remark Uniform Staff:</label>
-                <p id="modalRemark" class="text-sm bg-amber-50 border border-amber-100 p-2.5 rounded-xl text-amber-900 italic"></p>
-            </div>
+            <form id="form-modal-action" onsubmit="handleModalSubmit(event)" class="space-y-3">
+                <input type="hidden" id="modal-hidden-id">
+                <input type="hidden" id="modal-hidden-target-status">
 
-            <!-- TAILOR ACTION FORM IN MODAL -->
-            <div id="tailorActionBox" class="border-t border-slate-100 pt-4 space-y-3">
-                <div id="startTaskSection" class="hidden">
-                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nama Tailor / Penjahit</label>
-                    <input type="text" id="inputTailorName" placeholder="Masukkan nama Anda..." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm mb-3">
-                    <button onclick="executeStartTask()" class="w-full py-2.5 bg-blue-600 text-white font-bold rounded-xl shadow hover:bg-blue-700 transition">
-                        <i class="fa-solid fa-play mr-1"></i> Start Repair Task
-                    </button>
-                </div>
-
-                <div id="completeTaskSection" class="hidden space-y-3">
+                <div id="modal-completion-fields" class="space-y-3 hidden">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Hasil Perbaikan (Repair Result)</label>
-                        <select id="inputRepairResult" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm">
-                            <option value="Selesai Dijahit">Selesai Dijahit</option>
-                            <option value="Ganti Komponen Baru">Ganti Komponen Baru</option>
-                            <option value="Permak Selesai">Permak Selesai</option>
-                            <option value="Tidak Bisa Diperbaiki">Tidak Bisa Diperbaiki (Afkir)</option>
+                        <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Hasil Perbaikan (Repair Result)</label>
+                        <select id="modal-repair-result" class="w-full px-3 py-2 border rounded-lg text-sm bg-white">
+                            <option value="Jahitan Rapih / Fixed">Jahitan Rapih / Fixed</option>
+                            <option value="Kancing Diganti Baru">Kancing Diganti Baru</option>
+                            <option value="Resleting Diganti Baru">Resleting Diganti Baru</option>
+                            <option value="Potong / Alterasi Selesai">Potong / Alterasi Selesai</option>
+                            <option value="Diberdayakan / Replaced">Diberdayakan / Replaced</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Catatan Tailor</label>
-                        <textarea id="inputTailorRemark" rows="2" placeholder="Catatan hasil pengerjaan..." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm"></textarea>
+                        <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Catatan Tailor</label>
+                        <textarea id="modal-tailor-remarks" rows="2" placeholder="Catatan opsional dari tailor..." class="w-full px-3 py-2 border rounded-lg text-sm"></textarea>
                     </div>
-                    <button onclick="executeCompleteTask()" class="w-full py-2.5 bg-emerald-600 text-white font-bold rounded-xl shadow hover:bg-emerald-700 transition">
-                        <i class="fa-solid fa-check-double mr-1"></i> Submit Completion
+                </div>
+
+                <div class="flex justify-end space-x-2 pt-2 border-t">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded-lg text-sm text-gray-600">Batal</button>
+                    <button type="submit" id="modal-submit-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">
+                        Proses Task
                     </button>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 
-
-    <!-- JAVASCRIPT APP LOGIC -->
+    <!-- JavaScript Logic -->
     <script>
-        // CONFIG & STATE
-        let CONFIG = {
-            API_URL: localStorage.getItem("gas_api_url") || ""
+        // Store Application State
+        let state = {
+            apiUrl: localStorage.getItem('ud_api_url') || '',
+            tasks: [],
+            currentTailorFilter: 'ALL'
         };
 
-        let currentRole = "UNIFORM"; // UNIFORM, TAILOR, MANAGER
-        let currentTab = "dashboard";
-        let currentTailorFilter = "ALL";
-        let activeModalTask = null;
-
-        // MOCK DATA FOR DEMO MODE
-        let mockTasks = [
-            {
-                uniqueID: "UD-260813-0001",
-                date: "2026-08-13 08:30",
-                staff: "Rina Wijaya",
-                item: "Kemeja Staff",
-                defect: "Jahitan Lepas",
-                quantity: 1,
-                credit: 1,
-                status: "OPEN",
-                tailor: "-",
-                startTime: "-",
-                completionTime: "-",
-                repairResult: "-",
-                remarks: "Lengan kanan terlepas jahitan"
-            },
-            {
-                uniqueID: "UD-260813-0002",
-                date: "2026-08-13 09:15",
-                staff: "Ahmad Yani",
-                item: "Jas / Blazer",
-                defect: "Resleting Rusak",
-                quantity: 1,
-                credit: 2,
-                status: "IN_PROGRESS",
-                tailor: "Pak Slamet",
-                startTime: "2026-08-13 09:40",
-                completionTime: "-",
-                repairResult: "-",
-                remarks: "Resleting depan macet total"
-            },
-            {
-                uniqueID: "UD-260813-0003",
-                date: "2026-08-13 07:45",
-                staff: "Dewi Lestari",
-                item: "Celana Kerja",
-                defect: "Kancing Lepas/Hilang",
-                quantity: 2,
-                credit: 1,
-                status: "COMPLETED",
-                tailor: "Ibu Hartini",
-                startTime: "2026-08-13 08:00",
-                completionTime: "2026-08-13 08:20",
-                repairResult: "Ganti Komponen Baru",
-                remarks: "Dua kancing celana diganti kancing baru"
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            if (state.apiUrl) {
+                document.getElementById('cfg-api-url').value = state.apiUrl;
+                updateStatusIndicator(true, "Connected to GAS");
+            } else {
+                updateStatusIndicator(false, "Demo Mode (Local)");
+                loadDemoData();
             }
-        ];
-
-        // INIT APP
-        document.addEventListener("DOMContentLoaded", () => {
-            document.getElementById("configApiUrl").value = CONFIG.API_URL;
-            updateApiStatusBadge();
-            renderAll();
+            refreshData();
         });
 
-        function updateApiStatusBadge() {
-            const badgeText = document.getElementById("apiStatusText");
-            if (CONFIG.API_URL) {
-                badgeText.innerText = "Connected to Google Sheet";
-                badgeText.parentElement.classList.remove("text-amber-400");
-                badgeText.parentElement.classList.add("text-emerald-400");
+        // Tab Navigation Router
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('bg-indigo-800'));
+
+            document.getElementById(`view-${tabName}`).classList.add('active');
+            const activeBtn = document.getElementById(`tab-btn-${tabName}`);
+            if (activeBtn) activeBtn.classList.add('bg-indigo-800');
+        }
+
+        // Auto Weight Calculation based on Item & Defect
+        function autoFillCredit() {
+            const defect = document.getElementById('inp-defect').value;
+            const creditInput = document.getElementById('inp-credit');
+
+            if (defect.includes("Resleting") || defect.includes("Potong / Alterasi")) {
+                creditInput.value = 2;
+            } else if (defect.includes("Kain Sobek")) {
+                creditInput.value = 3;
             } else {
-                badgeText.innerText = "Demo Mode (Local Storage)";
+                creditInput.value = 1;
             }
         }
 
-        // ROLE SWITCHING
-        function setRole(role) {
-            currentRole = role;
-            document.querySelectorAll("#btnRoleUniform, #btnRoleTailor, #btnRoleManager").forEach(btn => {
-                btn.classList.remove("bg-blue-600", "text-white");
-                btn.classList.add("text-slate-300");
-            });
-
-            if (role === 'UNIFORM') {
-                document.getElementById("btnRoleUniform").classList.add("bg-blue-600", "text-white");
-                switchTab('uniform-module');
-            } else if (role === 'TAILOR') {
-                document.getElementById("btnRoleTailor").classList.add("bg-blue-600", "text-white");
-                switchTab('tailor-module');
-            } else if (role === 'MANAGER') {
-                document.getElementById("btnRoleManager").classList.add("bg-blue-600", "text-white");
-                switchTab('reports');
-            }
-        }
-
-        // TAB NAVIGATION
-        function switchTab(tabId) {
-            currentTab = tabId;
-            document.querySelectorAll("main > section").forEach(sec => sec.classList.add("hidden"));
-            document.getElementById(`view-${tabId}`).classList.remove("hidden");
-
-            document.querySelectorAll("nav button").forEach(btn => btn.classList.remove("tab-active"));
-            const activeNav = document.getElementById(`nav-${tabId}`);
-            if (activeNav) activeNav.classList.add("tab-active");
-
-            renderAll();
-        }
-
-        // CREDIT AUTO SETTER
-        function autoSetCredit() {
-            const defect = document.getElementById("inputDefect").value;
-            const creditInput = document.getElementById("inputCredit");
-            if (defect.includes("1 Credit")) creditInput.value = 1;
-            else if (defect.includes("2 Credit")) creditInput.value = 2;
-            else if (defect.includes("3 Credit")) creditInput.value = 3;
-            else creditInput.value = 1;
-        }
-
-        // DATA SYNCHRONIZATION
-        async function fetchTasks() {
-            if (!CONFIG.API_URL) return mockTasks;
-            try {
-                const res = await fetch(`${CONFIG.API_URL}?action=getTasks`);
-                const json = await res.json();
-                if (json.success && json.data) {
-                    mockTasks = json.data;
-                    return mockTasks;
+        // Fetch Data from API or Local Demo
+        async function refreshData() {
+            if (state.apiUrl) {
+                try {
+                    const res = await fetch(`${state.apiUrl}?action=getTasks`);
+                    const json = await res.json();
+                    if (json.success) {
+                        state.tasks = json.data;
+                    }
+                } catch (e) {
+                    console.error("API Fetch Error:", e);
                 }
-            } catch (err) {
-                console.warn("GAS fetch error, fallback to mock data:", err);
             }
-            return mockTasks;
-        }
-
-        async function renderAll() {
-            const tasks = await fetchTasks();
-            renderDashboard(tasks);
-            renderMySubmissions(tasks);
-            renderTailorQueue(tasks);
-            renderReports(tasks);
-        }
-
-        // RENDER DASHBOARD
-        function renderDashboard(tasks) {
-            const today = new Date().toISOString().slice(0, 10);
-            
-            const openTasks = tasks.filter(t => t.status === "OPEN");
-            const inProgress = tasks.filter(t => t.status === "IN_PROGRESS");
-            const completed = tasks.filter(t => t.status === "COMPLETED");
-
-            document.getElementById("statTotalToday").innerText = tasks.length;
-            document.getElementById("statOpen").innerText = openTasks.length;
-            document.getElementById("statInProgress").innerText = inProgress.length;
-            document.getElementById("statCompleted").innerText = completed.length;
-            document.getElementById("badgeOpenCount").innerText = openTasks.length;
-
-            const totalCredits = completed.reduce((acc, curr) => acc + Number(curr.credit || 0), 0);
-            document.getElementById("statCredits").innerText = totalCredits;
-
-            const tableBody = document.getElementById("dashboardTableBody");
-            tableBody.innerHTML = tasks.slice(0, 5).map(t => `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="px-6 py-3 font-mono font-bold text-xs text-blue-600">${t.uniqueID}</td>
-                    <td class="px-6 py-3 font-medium text-slate-800">${t.item} <span class="text-xs text-slate-400">(${t.defect})</span></td>
-                    <td class="px-6 py-3 text-slate-600">${t.staff}</td>
-                    <td class="px-6 py-3 text-slate-600">${t.tailor || '-'}</td>
-                    <td class="px-6 py-3">
-                        <span class="px-2.5 py-1 text-xs rounded-full font-bold status-badge-${t.status}">${t.status}</span>
-                    </td>
-                    <td class="px-6 py-3 text-right">
-                        <button onclick="openTaskModal('${t.uniqueID}')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded-lg font-semibold transition">View</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        // RENDER UNIFORM SUBMISSIONS
-        function renderMySubmissions(tasks = mockTasks) {
-            const search = document.getElementById("searchSubmission") ? document.getElementById("searchSubmission").value.toLowerCase() : "";
-            const filtered = tasks.filter(t => t.uniqueID.toLowerCase().includes(search) || t.item.toLowerCase().includes(search));
-
-            const tbody = document.getElementById("mySubmissionsTableBody");
-            tbody.innerHTML = filtered.map(t => `
-                <tr class="hover:bg-slate-50">
-                    <td class="px-4 py-3 font-mono text-xs font-bold text-slate-900">${t.uniqueID}</td>
-                    <td class="px-4 py-3 text-xs text-slate-500">${t.date.split(' ')[0]}</td>
-                    <td class="px-4 py-3">
-                        <div class="font-semibold text-slate-800">${t.item}</div>
-                        <div class="text-xs text-slate-400">${t.defect}</div>
-                    </td>
-                    <td class="px-4 py-3 text-xs">Qty: ${t.quantity} | <span class="font-bold text-purple-600">${t.credit} Cr</span></td>
-                    <td class="px-4 py-3">
-                        <span class="px-2.5 py-0.5 text-xs rounded-full font-bold status-badge-${t.status}">${t.status}</span>
-                    </td>
-                    <td class="px-4 py-3">
-                        <button onclick="openTaskModal('${t.uniqueID}')" class="text-blue-600 hover:underline text-xs font-semibold">Detail</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        // RENDER TAILOR QUEUE
-        function setTailorFilter(filter) {
-            currentTailorFilter = filter;
-            document.querySelectorAll("#filterTailorALL, #filterTailorOPEN, #filterTailorIN_PROGRESS, #filterTailorCOMPLETED").forEach(btn => {
-                btn.classList.remove("bg-white", "shadow-sm", "text-slate-800");
-                btn.classList.add("text-slate-600");
-            });
-            document.getElementById(`filterTailor${filter}`).classList.add("bg-white", "shadow-sm", "text-slate-800");
+            renderDashboard();
+            renderUniformTable();
             renderTailorQueue();
         }
 
-        function renderTailorQueue(tasks = mockTasks) {
-            const grid = document.getElementById("tailorTaskGrid");
-            const filtered = tasks.filter(t => currentTailorFilter === "ALL" || t.status === currentTailorFilter);
+        // Render Dashboard Metrics & Table
+        function renderDashboard() {
+            const tasks = state.tasks;
+            const open = tasks.filter(t => t.status === 'OPEN').length;
+            const progress = tasks.filter(t => t.status === 'IN_PROGRESS').length;
+            const completed = tasks.filter(t => t.status === 'COMPLETED').length;
+            const credits = tasks.filter(t => t.status === 'COMPLETED').reduce((acc, curr) => acc + (Number(curr.credit) || 0), 0);
+
+            document.getElementById('stat-today').innerText = tasks.length;
+            document.getElementById('stat-open').innerText = open;
+            document.getElementById('stat-progress').innerText = progress;
+            document.getElementById('stat-completed').innerText = completed;
+            document.getElementById('stat-credits').innerText = credits;
+
+            // Render Recent 5 Table
+            const tbody = document.getElementById('dashboard-recent-table');
+            tbody.innerHTML = '';
+
+            tasks.slice(0, 5).forEach(t => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-mono font-bold text-indigo-600">${t.uniqueID}</td>
+                    <td class="py-3 px-4 text-xs text-gray-500">${t.date || '-'}</td>
+                    <td class="py-3 px-4 font-medium text-gray-700">${t.reportingStaff || '-'}</td>
+                    <td class="py-3 px-4 text-xs">
+                        <div class="font-bold text-gray-800">${t.staff}</div>
+                        <div class="text-gray-500">${t.department}</div>
+                    </td>
+                    <td class="py-3 px-4 text-xs">
+                        <span class="font-medium">${t.item}</span> - <span class="text-gray-500">${t.defect}</span>
+                    </td>
+                    <td class="py-3 px-4">${getBadgeHtml(t.status)}</td>
+                    <td class="py-3 px-4 text-xs text-gray-600">${t.tailor || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Render Uniform Submissions Log
+        function renderUniformTable() {
+            const tbody = document.getElementById('uniform-submissions-table');
+            tbody.innerHTML = '';
+
+            state.tasks.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 font-mono font-bold text-indigo-600 text-xs">${t.uniqueID}</td>
+                    <td class="py-2.5 px-3 text-xs font-medium text-gray-700">${t.reportingStaff || '-'}</td>
+                    <td class="py-2.5 px-3 text-xs">
+                        <div class="font-bold text-gray-800">${t.staff}</div>
+                        <div class="text-gray-500">${t.department}</div>
+                    </td>
+                    <td class="py-2.5 px-3 text-xs">${t.item} (${t.defect})</td>
+                    <td class="py-2.5 px-3">${getBadgeHtml(t.status)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Handle Uniform Form Submit
+        async function handleCreateSubmission(e) {
+            e.preventDefault();
+
+            const payload = {
+                reportingStaff: document.getElementById('inp-reporting-staff').value,
+                staff: document.getElementById('inp-staff-name').value,
+                department: document.getElementById('inp-department').value,
+                item: document.getElementById('inp-item').value,
+                defect: document.getElementById('inp-defect').value,
+                quantity: document.getElementById('inp-quantity').value,
+                credit: document.getElementById('inp-credit').value,
+                remarks: document.getElementById('inp-remarks').value
+            };
+
+            const btn = document.getElementById('btn-submit-defect');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Submitting...`;
+
+            if (state.apiUrl) {
+                try {
+                    await fetch(state.apiUrl, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'createSubmission', data: payload })
+                    });
+                } catch (err) {
+                    alert("Error submitting: " + err);
+                }
+            } else {
+                // Local Demo Generation
+                const today = new Date();
+                const yy = today.getFullYear().toString().slice(-2);
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                const uniqueID = `UD-${yy}${mm}${dd}-${String(state.tasks.length + 1).padStart(4, '0')}`;
+
+                state.tasks.unshift({
+                    uniqueID: uniqueID,
+                    date: new Date().toLocaleString('id-ID'),
+                    ...payload,
+                    status: 'OPEN',
+                    tailor: ''
+                });
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Submit & Generate ID`;
+
+            // Reset inputs except reporting staff
+            document.getElementById('inp-staff-name').value = '';
+            document.getElementById('inp-remarks').value = '';
+            
+            alert("Report successfully logged!");
+            refreshData();
+        }
+
+        // Render Tailor Queue Grid Cards
+        function renderTailorQueue() {
+            const grid = document.getElementById('tailor-task-grid');
+            grid.innerHTML = '';
+
+            const filtered = state.currentTailorFilter === 'ALL' 
+                ? state.tasks 
+                : state.tasks.filter(t => t.status === state.currentTailorFilter);
 
             if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400">No tasks found for this status.</div>`;
+                grid.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 text-sm">Tidak ada tugas pada status ini.</div>`;
                 return;
             }
 
-            grid.innerHTML = filtered.map(t => `
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4 hover:border-blue-300 transition">
-                    <div class="flex items-center justify-between">
-                        <span class="font-mono text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded">${t.uniqueID}</span>
-                        <span class="px-2.5 py-0.5 text-xs rounded-full font-bold status-badge-${t.status}">${t.status}</span>
-                    </div>
+            filtered.forEach(t => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-3 flex flex-col justify-between";
 
-                    <div>
-                        <h4 class="font-bold text-slate-900 text-lg">${t.item}</h4>
-                        <p class="text-xs text-amber-800 font-medium bg-amber-50 px-2 py-1 rounded inline-block mt-1">${t.defect}</p>
-                    </div>
+                let actionButton = '';
+                if (t.status === 'OPEN') {
+                    actionButton = `<button onclick="openActionModal('${t.uniqueID}', 'IN_PROGRESS')" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg text-xs transition">
+                        <i class="fa-solid fa-play mr-1"></i> Start Task
+                    </button>`;
+                } else if (t.status === 'IN_PROGRESS') {
+                    actionButton = `<button onclick="openActionModal('${t.uniqueID}', 'COMPLETED')" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg text-xs transition">
+                        <i class="fa-solid fa-check mr-1"></i> Submit Completion
+                    </button>`;
+                } else {
+                    actionButton = `<div class="text-center py-1 bg-emerald-50 text-emerald-700 text-xs rounded font-semibold"><i class="fa-solid fa-circle-check mr-1"></i> Completed</div>`;
+                }
 
-                    <div class="text-xs text-slate-500 space-y-1 border-t border-b border-slate-100 py-2">
-                        <div><strong>Staff:</strong> ${t.staff}</div>
-                        <div><strong>Qty / Credit:</strong> ${t.quantity} item (${t.credit} Credit)</div>
-                        <div><strong>Remark:</strong> ${t.remarks || '-'}</div>
-                    </div>
-
-                    <div class="pt-1">
-                        ${t.status === 'OPEN' ? `
-                            <button onclick="openTaskModal('${t.uniqueID}')" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow transition">
-                                <i class="fa-solid fa-play mr-1"></i> Start Task
-                            </button>
-                        ` : t.status === 'IN_PROGRESS' ? `
-                            <button onclick="openTaskModal('${t.uniqueID}')" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow transition">
-                                <i class="fa-solid fa-check-double mr-1"></i> Complete Task
-                            </button>
-                        ` : `
-                            <button onclick="openTaskModal('${t.uniqueID}')" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
-                                View Details
-                            </button>
-                        `}
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // RENDER REPORTS
-        function renderReports(tasks = mockTasks) {
-            // Tailor Productivity
-            const tailorMap = {};
-            tasks.filter(t => t.status === 'COMPLETED').forEach(t => {
-                const tailor = t.tailor || "Unassigned";
-                if (!tailorMap[tailor]) tailorMap[tailor] = { count: 0, credits: 0 };
-                tailorMap[tailor].count += 1;
-                tailorMap[tailor].credits += Number(t.credit || 0);
-            });
-
-            const tailorBody = document.getElementById("tailorProductivityBody");
-            const tailorKeys = Object.keys(tailorMap);
-            if (tailorKeys.length === 0) {
-                tailorBody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-slate-400 text-xs">No completed repair work yet.</td></tr>`;
-            } else {
-                tailorBody.innerHTML = tailorKeys.map(k => `
-                    <tr>
-                        <td class="px-4 py-2 font-semibold text-slate-800">${k}</td>
-                        <td class="px-4 py-2 text-center text-slate-600">${tailorMap[k].count}</td>
-                        <td class="px-4 py-2 text-center font-bold text-purple-600">${tailorMap[k].credits} Cr</td>
-                    </tr>
-                `).join('');
-            }
-
-            // Defect Volume Bars
-            const defectCounts = {};
-            tasks.forEach(t => {
-                defectCounts[t.defect] = (defectCounts[t.defect] || 0) + 1;
-            });
-
-            const totalDefects = tasks.length || 1;
-            const barsContainer = document.getElementById("defectVolumeBars");
-            barsContainer.innerHTML = Object.keys(defectCounts).map(d => {
-                const count = defectCounts[d];
-                const pct = Math.round((count / totalDefects) * 100);
-                return `
-                    <div>
-                        <div class="flex justify-between text-xs font-semibold mb-1">
-                            <span>${d}</span>
-                            <span class="text-slate-500">${count} reports (${pct}%)</span>
+                card.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-start">
+                            <span class="font-mono text-sm font-bold text-indigo-600">${t.uniqueID}</span>
+                            ${getBadgeHtml(t.status)}
                         </div>
-                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                            <div class="bg-blue-600 h-full rounded-full" style="width: ${pct}%"></div>
+                        <div class="border-t border-b py-2 space-y-1">
+                            <div class="text-xs text-gray-500">Penginput: <span class="font-semibold text-gray-700">${t.reportingStaff || '-'}</span></div>
+                            <div class="text-sm font-bold text-gray-800">${t.staff} <span class="text-xs font-normal text-gray-500">(${t.department})</span></div>
+                            <div class="text-xs font-medium text-indigo-900">${t.item} - ${t.defect} (${t.quantity} pcs)</div>
+                            ${t.remarks ? `<div class="text-xs italic text-gray-500 mt-1">"${t.remarks}"</div>` : ''}
                         </div>
+                    </div>
+                    <div class="pt-2">
+                        ${actionButton}
                     </div>
                 `;
-            }).join('');
+                grid.appendChild(card);
+            });
         }
 
-        // CREATE NEW DEFECT FORM SUBMIT
-        async function handleFormSubmit(e) {
-            e.preventDefault();
-            const btn = document.getElementById("btnSubmitDefect");
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Submitting...`;
-
-            const now = new Date();
-            const dateStr = now.toISOString().slice(0,10) + " " + now.toTimeString().slice(0,5);
-            const dateCode = now.getFullYear().toString().slice(-2) + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0');
-            const seq = String(mockTasks.length + 1).padStart(4, '0');
-            const uniqueID = `UD-${dateCode}-${seq}`;
-
-            const payload = {
-                uniqueID: uniqueID,
-                date: dateStr,
-                staff: document.getElementById("inputStaff").value,
-                item: document.getElementById("inputItem").value,
-                defect: document.getElementById("inputDefect").value,
-                quantity: Number(document.getElementById("inputQuantity").value),
-                credit: Number(document.getElementById("inputCredit").value),
-                remarks: document.getElementById("inputRemark").value,
-                status: "OPEN"
-            };
-
-            if (CONFIG.API_URL) {
-                try {
-                    await fetch(CONFIG.API_URL, {
-                        method: "POST",
-                        headers: { "Content-Type": "text/plain;charset=utf-8" },
-                        body: JSON.stringify({ action: "createSubmission", data: payload })
-                    });
-                } catch (err) {
-                    console.error("API POST error:", err);
-                }
+        function filterTailorQueue(status) {
+            state.currentTailorFilter = status;
+            document.querySelectorAll('.tailor-filter-btn').forEach(b => {
+                b.classList.remove('bg-indigo-600', 'text-white');
+                b.classList.add('bg-gray-100', 'text-gray-600');
+            });
+            const activeBtn = document.getElementById(`tailor-filter-${status}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-gray-100', 'text-gray-600');
+                activeBtn.classList.add('bg-indigo-600', 'text-white');
             }
-
-            mockTasks.unshift(payload);
-            document.getElementById("defectForm").reset();
-            btn.disabled = false;
-            btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> <span>Submit & Generate ID</span>`;
-
-            alert(`Defect report successfully created with ID: ${uniqueID}`);
-            renderAll();
+            renderTailorQueue();
         }
 
-        // MODAL MANAGEMENT
-        function openTaskModal(uniqueID) {
-            const task = mockTasks.find(t => t.uniqueID === uniqueID);
+        // Modal Action Handlers
+        function openActionModal(id, targetStatus) {
+            const task = state.tasks.find(t => t.uniqueID === id);
             if (!task) return;
 
-            activeModalTask = task;
-            document.getElementById("modalUniqueID").innerText = task.uniqueID;
-            document.getElementById("modalItemTitle").innerText = `${task.item} (${task.quantity} Pcs)`;
-            document.getElementById("modalStaff").innerText = task.staff;
-            document.getElementById("modalStatus").innerText = task.status;
-            document.getElementById("modalDefect").innerText = task.defect;
-            document.getElementById("modalCredit").innerText = `${task.credit} Credit`;
-            document.getElementById("modalTailor").innerText = task.tailor || "-";
-            document.getElementById("modalStartTime").innerText = task.startTime || "-";
-            document.getElementById("modalRemark").innerText = task.remarks || "Tidak ada catatan.";
+            document.getElementById('modal-task-id').innerText = task.uniqueID;
+            document.getElementById('modal-hidden-id').value = task.uniqueID;
+            document.getElementById('modal-hidden-target-status').value = targetStatus;
 
-            const startSec = document.getElementById("startTaskSection");
-            const completeSec = document.getElementById("completeTaskSection");
+            document.getElementById('modal-reporting-staff').innerText = task.reportingStaff || '-';
+            document.getElementById('modal-staff-dept').innerText = `${task.staff} (${task.department})`;
+            document.getElementById('modal-item-defect').innerText = `${task.item} - ${task.defect}`;
+            document.getElementById('modal-credit').innerText = task.credit;
+            document.getElementById('modal-remarks').innerText = task.remarks || 'Tidak ada';
 
-            startSec.classList.add("hidden");
-            completeSec.classList.add("hidden");
+            const completionFields = document.getElementById('modal-completion-fields');
+            const submitBtn = document.getElementById('modal-submit-btn');
 
-            if (task.status === "OPEN") {
-                startSec.classList.remove("hidden");
-            } else if (task.status === "IN_PROGRESS") {
-                completeSec.classList.remove("hidden");
+            if (targetStatus === 'COMPLETED') {
+                completionFields.classList.remove('hidden');
+                submitBtn.innerText = "Complete Task";
+                submitBtn.className = "px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700";
+            } else {
+                completionFields.classList.add('hidden');
+                submitBtn.innerText = "Start Task";
+                submitBtn.className = "px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600";
             }
 
-            document.getElementById("taskModal").classList.remove("hidden");
+            document.getElementById('task-modal').classList.remove('hidden');
+            document.getElementById('task-modal').classList.add('flex');
         }
 
         function closeModal() {
-            document.getElementById("taskModal").classList.add("hidden");
-            activeModalTask = null;
+            document.getElementById('task-modal').classList.add('hidden');
+            document.getElementById('task-modal').classList.remove('flex');
         }
 
-        // TAILOR WORKFLOW ACTIONS
-        async function executeStartTask() {
-            const tailorName = document.getElementById("inputTailorName").value.trim();
-            if (!tailorName) {
-                alert("Masukkan nama Tailor terlebih dahulu!");
-                return;
-            }
+        async function handleModalSubmit(e) {
+            e.preventDefault();
+            const uniqueID = document.getElementById('modal-hidden-id').value;
+            const targetStatus = document.getElementById('modal-hidden-target-status').value;
+            const tailorName = document.getElementById('active-tailor-name').value;
 
-            const nowStr = new Date().toISOString().slice(0,10) + " " + new Date().toTimeString().slice(0,5);
-            activeModalTask.status = "IN_PROGRESS";
-            activeModalTask.tailor = tailorName;
-            activeModalTask.startTime = nowStr;
-
-            if (CONFIG.API_URL) {
-                try {
-                    await fetch(CONFIG.API_URL, {
-                        method: "POST",
-                        headers: { "Content-Type": "text/plain;charset=utf-8" },
-                        body: JSON.stringify({ action: "updateTaskStatus", data: { uniqueID: activeModalTask.uniqueID, tailor: tailorName } })
+            if (targetStatus === 'IN_PROGRESS') {
+                if (state.apiUrl) {
+                    await fetch(state.apiUrl, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'updateTaskStatus', data: { uniqueID, tailor: tailorName } })
                     });
-                } catch (err) { console.error(err); }
+                } else {
+                    const t = state.tasks.find(t => t.uniqueID === uniqueID);
+                    if (t) { t.status = 'IN_PROGRESS'; t.tailor = tailorName; }
+                }
+            } else if (targetStatus === 'COMPLETED') {
+                const repairResult = document.getElementById('modal-repair-result').value;
+                const tailorRemarks = document.getElementById('modal-tailor-remarks').value;
+
+                if (state.apiUrl) {
+                    await fetch(state.apiUrl, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'submitCompletion', data: { uniqueID, repairResult, remarks: tailorRemarks } })
+                    });
+                } else {
+                    const t = state.tasks.find(t => t.uniqueID === uniqueID);
+                    if (t) { t.status = 'COMPLETED'; }
+                }
             }
 
             closeModal();
-            renderAll();
+            refreshData();
         }
 
-        async function executeCompleteTask() {
-            const result = document.getElementById("inputRepairResult").value;
-            const remark = document.getElementById("inputTailorRemark").value;
-            const nowStr = new Date().toISOString().slice(0,10) + " " + new Date().toTimeString().slice(0,5);
+        // Save Config API URL
+        function saveConfig() {
+            const url = document.getElementById('cfg-api-url').value.trim();
+            localStorage.setItem('ud_api_url', url);
+            state.apiUrl = url;
+            updateStatusIndicator(!!url, url ? "Connected to GAS" : "Demo Mode (Local)");
+            alert("Configuration saved!");
+            refreshData();
+        }
 
-            activeModalTask.status = "COMPLETED";
-            activeModalTask.completionTime = nowStr;
-            activeModalTask.repairResult = result;
-            if (remark) activeModalTask.remarks += ` [Tailor: ${remark}]`;
+        function updateStatusIndicator(isConnected, text) {
+            const ping = document.getElementById('api-status-ping');
+            const txt = document.getElementById('api-status-text');
+            txt.innerText = text;
 
-            if (CONFIG.API_URL) {
-                try {
-                    await fetch(CONFIG.API_URL, {
-                        method: "POST",
-                        headers: { "Content-Type": "text/plain;charset=utf-8" },
-                        body: JSON.stringify({ action: "submitCompletion", data: { uniqueID: activeModalTask.uniqueID, repairResult: result, remarks: remark } })
-                    });
-                } catch (err) { console.error(err); }
+            if (isConnected) {
+                ping.className = "h-2 w-2 rounded-full bg-emerald-400 animate-pulse";
+            } else {
+                ping.className = "h-2 w-2 rounded-full bg-yellow-400";
             }
-
-            closeModal();
-            renderAll();
         }
 
-        // CONFIG & MANUAL SYNC
-        function saveApiConfig() {
-            const url = document.getElementById("configApiUrl").value.trim();
-            localStorage.setItem("gas_api_url", url);
-            CONFIG.API_URL = url;
-            updateApiStatusBadge();
-            alert("Apps Script Web App URL Saved!");
-            renderAll();
+        // Utility: Status Badge HTML Generator
+        function getBadgeHtml(status) {
+            if (status === 'OPEN') return `<span class="badge-open px-2.5 py-1 text-xs font-bold rounded-full">OPEN</span>`;
+            if (status === 'IN_PROGRESS') return `<span class="badge-progress px-2.5 py-1 text-xs font-bold rounded-full">IN PROGRESS</span>`;
+            if (status === 'COMPLETED') return `<span class="badge-completed px-2.5 py-1 text-xs font-bold rounded-full">COMPLETED</span>`;
+            return `<span class="bg-gray-100 text-gray-600 px-2.5 py-1 text-xs font-bold rounded-full">${status}</span>`;
         }
 
-        function clearApiConfig() {
-            localStorage.removeItem("gas_api_url");
-            CONFIG.API_URL = "";
-            document.getElementById("configApiUrl").value = "";
-            updateApiStatusBadge();
-            alert("Switched back to Demo Mode.");
-            renderAll();
-        }
-
-        function refreshData() {
-            renderAll();
+        // Demo Initial Data
+        function loadDemoData() {
+            state.tasks = [
+                {
+                    uniqueID: 'UD-260813-0001',
+                    date: '13/08/2026 08:30',
+                    reportingStaff: 'Siti Rahma',
+                    staff: 'Budi Santoso',
+                    department: 'Front Office',
+                    item: 'Jas / Blazer',
+                    defect: 'Kancing Lepas / Hilang',
+                    quantity: 1,
+                    credit: 1,
+                    status: 'OPEN',
+                    tailor: '',
+                    remarks: 'Kancing jas depan urutan kedua hilang'
+                },
+                {
+                    uniqueID: 'UD-260813-0002',
+                    date: '13/08/2026 09:15',
+                    reportingStaff: 'Ahmad Ridwan',
+                    staff: 'Dewi Lestari',
+                    department: 'Food & Beverage',
+                    item: 'Gaun / Dress',
+                    defect: 'Resleting Rusak / Macet',
+                    quantity: 1,
+                    credit: 2,
+                    status: 'IN_PROGRESS',
+                    tailor: 'Pak Joko',
+                    remarks: 'Resleting belakang macet total'
+                }
+            ];
         }
     </script>
 </body>
