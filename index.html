@@ -77,7 +77,7 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
         <h2 class="text-2xl font-bold text-gray-900">Operational Dashboard</h2>
-        <p class="text-sm text-gray-500">Ringkasan aktivitas dan status perbaikan seragam hari ini.</p>
+        <p class="text-sm text-gray-500">Activity Summary and Repair Progress.</p>
       </div>
       <button onclick="refreshData()" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition active:scale-95">
         <i class="fa-solid fa-rotate mr-2"></i> Refresh Data
@@ -87,19 +87,19 @@
     <!-- Metric Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
       <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-        <div class="text-xs font-semibold uppercase text-gray-400">Today's Defects</div>
+        <div class="text-xs font-semibold uppercase text-gray-400">Defects</div>
         <div class="text-2xl font-bold text-gray-800 mt-1" id="stat-today">0</div>
-        <div class="text-xs text-gray-500 mt-2"><i class="fa-regular fa-clock mr-1"></i> Total Laporan Hari Ini</div>
+        <div class="text-xs text-gray-500 mt-2"><i class="fa-regular fa-clock mr-1"></i> Total Report</div>
       </div>
       <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm border-l-4 border-l-amber-500">
         <div class="text-xs font-semibold uppercase text-amber-600">Open Tasks</div>
         <div class="text-2xl font-bold text-amber-600 mt-1" id="stat-open">0</div>
-        <div class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-hourglass-start mr-1"></i> Menunggu Tailor</div>
+        <div class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-hourglass-start mr-1"></i> Waiting for Tailor</div>
       </div>
       <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm border-l-4 border-l-blue-500">
         <div class="text-xs font-semibold uppercase text-blue-600">In Progress</div>
         <div class="text-2xl font-bold text-blue-600 mt-1" id="stat-progress">0</div>
-        <div class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-spinner mr-1"></i> Dalam Pengerjaan</div>
+        <div class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-spinner mr-1"></i> In </div>
       </div>
       <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm border-l-4 border-l-emerald-500">
         <div class="text-xs font-semibold uppercase text-emerald-600">Completed</div>
@@ -109,7 +109,7 @@
       <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm border-l-4 border-l-purple-500">
         <div class="text-xs font-semibold uppercase text-purple-600">Total Credits</div>
         <div class="text-2xl font-bold text-purple-600 mt-1" id="stat-credits">0</div>
-        <div class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-award mr-1"></i> Total Bobot Kredit Kerja</div>
+        <div class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-award mr-1"></i> Total Workload</div>
       </div>
     </div>
 
@@ -124,10 +124,10 @@
           <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold border-b">
             <tr>
               <th class="py-3 px-4">Unique ID</th>
-              <th class="py-3 px-4">Tanggal / Waktu</th>
+              <th class="py-3 px-4">Date / Time</th>
               <th class="py-3 px-4">Penginput (Uniform)</th>
-              <th class="py-3 px-4">Pemilik & Dept</th>
-              <th class="py-3 px-4">Item / Defect</th>
+              <th class="py-3 px-4">Owner & Dept</th>
+              <th class="py-3 px-4">Items / Defect</th>
               <th class="py-3 px-4">Status</th>
               <th class="py-3 px-4">Tailor</th>
             </tr>
@@ -191,6 +191,7 @@
             <select id="inp-department" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
               <option value="">-- Pilih Departemen --</option>
               <option value="Front Office">Front Office</option>
+              <option value="GRE">GRE</option>
               <option value="GSC">GSC</option>
               <option value="Club">Club</option>
               <option value="Concierge">Concierge</option>
@@ -207,6 +208,8 @@
               <option value="Finance">Finance</option>
               <option value="Engineering">Engineering</option>
               <option value="Security">Security</option>
+              <option value="P&C">P&C</option>
+              <option value="Wellness">Wellness</option>
               <option value="Sales & Executive">Sales & Executive</option>
               <option value="Other">Lain-lain</option>
             </select>
@@ -220,6 +223,7 @@
               <option value="">-- Pilih Jenis Seragam --</option>
               <option value="Kemeja / Shirt">Kemeja / Shirt</option>
               <option value="Celana / Trousers">Celana / Trousers</option>
+              <option value="Skirt">Skirt</option>
               <option value="Jas / Blazer">Jas / Blazer</option>
               <option value="Gaun / Dress">Gaun / Dress</option>
                <option value="Cook Jacket">Cook Jacket</option>
@@ -289,8 +293,8 @@
               <tr>
                 <th class="py-2.5 px-3">Unique ID</th>
                 <th class="py-2.5 px-3">Penginput</th>
-                <th class="py-2.5 px-3">Pemilik & Dept</th>
-                <th class="py-2.5 px-3">Item & Defect</th>
+                <th class="py-2.5 px-3">Ownwr & Dept</th>
+                <th class="py-2.5 px-3">Items & Defect</th>
                 <th class="py-2.5 px-3">Status</th>
               </tr>
             </thead>
@@ -358,8 +362,8 @@
     </div>
     <div class="space-y-2 text-sm bg-gray-50 p-3 rounded-lg border">
       <p><strong>Penginput (Uniform):</strong> <span id="modal-reporting-staff">-</span></p>
-      <p><strong>Pemilik & Dept:</strong> <span id="modal-staff-dept">-</span></p>
-      <p><strong>Item / Defect:</strong> <span id="modal-item-defect">-</span></p>
+      <p><strong>Owner & Dept:</strong> <span id="modal-staff-dept">-</span></p>
+      <p><strong>Items / Defect:</strong> <span id="modal-item-defect">-</span></p>
       <p><strong>Total Credit Weight:</strong> <span id="modal-credit" class="font-bold text-indigo-600">1</span></p>
       <p><strong>Remark Masuk:</strong> <span id="modal-remarks" class="italic text-gray-600">-</span></p>
     </div>
