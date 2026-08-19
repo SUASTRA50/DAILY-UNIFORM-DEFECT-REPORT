@@ -713,14 +713,16 @@ function autoFillCredit() {
   const totalDisplay = document.getElementById('inp-total-credit-display');
 
   let unitCredit = 1;
-  if (defect.includes("Torn Fabric")) defect.includes("Alteration")) {
-    unitCredit = 3;
-  } else if (defect.includes("Zipper") defect.includes("Cut / Length Alteration")) {
-    unitCredit = 2;
-  } else {
-    unitCredit = 1;
-  }
-  creditInput.value = unitCredit;
+
+if (defect.includes("Torn Fabric") || defect.includes("Alteration")) {
+  unitCredit = 3;
+} else if (defect.includes("Zipper") || defect.includes("Cut / Length Alteration")) {
+  unitCredit = 2;
+} else {
+  unitCredit = 1;
+}
+
+creditInput.value = unitCredit;
 
   const qty = Math.max(1, parseInt(qtyInput.value, 10) || 1);
   const total = unitCredit * qty;
