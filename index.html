@@ -297,7 +297,7 @@
                 <option value="Zipper Broken / Stuck">Zipper Broken / Stuck</option>
                 <option value="Torn Fabric">Torn Fabric/Sobek Kain</option>
                 <option value="Alteration">Alteration/Vermak</option>
-                <option value="Cut / Length Alteration">Cut / Length Alteration/Potong</option>
+                <option value="Cut /Length">Potong/Panjang</option>
                 <option value="Others">Others</option>
               </select>
             </div>
@@ -713,7 +713,7 @@ function autoFillCredit() {
   const totalDisplay = document.getElementById('inp-total-credit-display');
 
   let unitCredit = 1;
-  if (defect.includes("Torn Fabric")) {
+  if (defect.includes("Torn Fabric")) || defect.includes("Alteration")) {
     unitCredit = 3;
   } else if (defect.includes("Zipper") || defect.includes("Cut / Length Alteration")) {
     unitCredit = 2;
