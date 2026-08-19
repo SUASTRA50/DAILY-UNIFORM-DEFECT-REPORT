@@ -896,7 +896,7 @@ function renderTailorQueue() {
         <div class="border-t border-b py-2 space-y-1">
           <div class="text-xs text-gray-500">Input By: <span class="font-semibold text-gray-700">${t.reportingStaff || t.inputBy || '-'}</span></div>
           <div class="text-sm font-bold text-gray-800">${t.staffName || t.staff || '-'} <span class="text-xs font-normal text-gray-500">(${t.department || '-'})</span></div>
-          <div class="text-xs font-medium text-indigo-900">${t.item} - ${t.defect} (${t.quantity || 1} pcs)</div>
+          <div class="text-xs font-medium text-indigo-900">${t.item} - ${t.defect}</div>
           <div class="text-xs font-semibold text-purple-700">Total Credit: ${totalCredit}</div>
           ${t.remarks ? `<div class="text-xs italic text-gray-500 mt-1 bg-gray-50 p-2 rounded border">"${t.remarks}"</div>` : ''}
         </div>
