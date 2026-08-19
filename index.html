@@ -713,9 +713,9 @@ function autoFillCredit() {
   const totalDisplay = document.getElementById('inp-total-credit-display');
 
   let unitCredit = 1;
-  if (defect.includes("Torn Fabric")) || defect.includes("Alteration")) {
+  if (defect.includes("Torn Fabric")) defect.includes("Alteration")) {
     unitCredit = 3;
-  } else if (defect.includes("Zipper") || defect.includes("Cut / Length Alteration")) {
+  } else if (defect.includes("Zipper") defect.includes("Cut / Length Alteration")) {
     unitCredit = 2;
   } else {
     unitCredit = 1;
