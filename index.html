@@ -175,8 +175,7 @@
               <th class="py-3 px-4">Tailor</th>
             </tr>
           </thead>
-          <tbody id="dashboard-recent-table" class="divide-y divide-gray-100">
-            </tbody>
+          <tbody id="dashboard-recent-table" class="divide-y divide-gray-100"></tbody>
         </table>
       </div>
     </div>
@@ -352,8 +351,7 @@
                   <th class="py-2.5 px-3">Status</th>
                 </tr>
               </thead>
-              <tbody id="uniform-submissions-table" class="divide-y divide-gray-100">
-                </tbody>
+              <tbody id="uniform-submissions-table" class="divide-y divide-gray-100"></tbody>
             </table>
           </div>
         </div>
@@ -385,7 +383,7 @@
               <option value="LiFeng">LiFeng</option>
               <option value="MO Bar">MO Bar</option>
               <option value="IRD">IRD</option>
-               <option value="Azure">Azure</option>
+              <option value="Azure">Azure</option>
               <option value="Banquet">Banquet</option>
               <option value="Steward">Steward</option>
               <option value="Kitchen / Culinary">Kitchen / Culinary</option>
@@ -615,7 +613,7 @@
       </div>
     </div>
 
-    <div class="flex space-x-2 border-b border-gray-200 pb-2">
+    <div class="flex space-x-2 border-b border-gray-200 pb-2 overflow-x-auto">
       <button onclick="filterTailorQueue('ALL')" id="tailor-filter-ALL" class="tailor-filter-btn px-4 py-2 rounded-lg text-xs font-bold bg-indigo-600 text-white">
         All Tasks
       </button>
@@ -630,8 +628,7 @@
       </button>
     </div>
 
-    <div id="tailor-task-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      </div>
+    <div id="tailor-task-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
   </section>
 
   <div class="mt-5 text-center text-[10px] text-slate-400 tracking-wide">
@@ -683,7 +680,6 @@
 
 <script>
 let state = {
-  // Ganti URL ini dengan URL Web App Apps Script milik Anda
   apiUrl: 'https://script.google.com/macros/s/AKfycbxe5nIWAd--nowDNAJf27TUYShBAmx_hu-QiiFAoDO-PkxSgQ1roBjZJO77jffjpD5a/exec',
   tasks: [],
   currentTailorFilter: 'ALL'
@@ -714,15 +710,15 @@ function autoFillCredit() {
 
   let unitCredit = 1;
 
-if (defect.includes("Torn Fabric") || defect.includes("Alteration")) {
-  unitCredit = 3;
-} else if (defect.includes("Zipper") || defect.includes("Cut / Length Alteration")) {
-  unitCredit = 2;
-} else {
-  unitCredit = 1;
-}
+  if (defect.includes("Torn Fabric") || defect.includes("Alteration")) {
+    unitCredit = 3;
+  } else if (defect.includes("Zipper") || defect.includes("Cut /Length")) {
+    unitCredit = 2;
+  } else {
+    unitCredit = 1;
+  }
 
-creditInput.value = unitCredit;
+  creditInput.value = unitCredit;
 
   const qty = Math.max(1, parseInt(qtyInput.value, 10) || 1);
   const total = unitCredit * qty;
