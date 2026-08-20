@@ -1084,13 +1084,16 @@ function uniformFormData(id){
 }
 
 // PERBAIKAN PENTING: Struktur Payload diselaraskan dengan Google Apps Script
+
+// FIX JEDA: cegah double-click + refresh background + tanpa alert blocking lama
 async function postUniformTransaction(action, data, formId, btnId){
   const btn = document.getElementById(btnId);
-  const originalBtnText = btn ? btn.innerHTML : '';
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...`;
-  }
+  if(!btn) return;
+  if(btn.dataset.saving === '1') return; // cegah dobel submit
+  const originalBtnText = btn.innerHTML;
+  btn.dataset.saving = '1';
+  btn.disabled = true;
+  btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...`;
 
   const payload = { 
     action: action, 
@@ -1113,15 +1116,17 @@ async function postUniformTransaction(action, data, formId, btnId){
     try {
       result = JSON.parse(textResponse);
     } catch(err) {
-      // Mengatasi jika response dari Apps Script berupa HTML error
       throw new Error("Respon Apps Script tidak valid.");
     }
 
     if(result.success === false) throw new Error(result.message || 'Gagal menyimpan transaksi.');
     
     document.getElementById(formId).reset(); 
-    alert('Berhasil disimpan!');
-    await refreshData();
+    // langsung feedback tanpa nunggu refresh
+    // ganti alert dengan toast kecil biar gak block
+    if(typeof showToast === 'function'){ showToast('Berhasil disimpan! ' + (result.count||'')); }
+    else { console.log('Berhasil disimpan!'); }
+    refreshData(); // jangan await - biar UI langsung responsif
   } catch(e){
     console.error("Submit Error:", e);
     alert('Error submitting: ' + e.message);
@@ -1129,9 +1134,11 @@ async function postUniformTransaction(action, data, formId, btnId){
     if (btn) {
       btn.disabled = false;
       btn.innerHTML = originalBtnText;
+      btn.dataset.saving = '0';
     }
   }
 }
+
 
 function submitUniformReceived(e){
   e.preventDefault();
