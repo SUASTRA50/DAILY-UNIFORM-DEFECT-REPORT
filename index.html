@@ -283,7 +283,7 @@
                 Uniform Item <span class="text-red-500">*</span>
               </label>
               <select id="inp-item" required onchange="autoFillCredit()" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
-                <option value="">-- Choose Uniform Type --</option>
+                <option value="">-- Choose Uniform/Linen Type --</option>
                 <option value="Trousers">Trousers</option>
                 <option value="Shirt">Shirt</option>
                 <option value="Polo Shirt">Polo Shirt</option>
@@ -294,6 +294,8 @@
                 <option value="Cook Jacket">Cook Jacket</option>
                 <option value="Apron">Apron</option>
                 <option value="Hat">Hat</option>
+                <option value="Duvet Cover">Duvet Cover</option>
+                <option value="Curtain">Curtain</option>
                 <option value="Others">Others</option>
               </select>
             </div>
@@ -594,6 +596,10 @@
             </div>
             <div class="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-lg">
               <span class="text-sm font-medium text-slate-700">Cloth</span>
+              <input type="number" name="Cloth" min="0" placeholder="0" class="w-20 px-2 py-1 border border-slate-300 rounded text-right text-sm outline-none focus:border-indigo-500">
+            </div>
+            <div class="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-lg">
+              <span class="text-sm font-medium text-slate-700">Table Cloth</span>
               <input type="number" name="Cloth" min="0" placeholder="0" class="w-20 px-2 py-1 border border-slate-300 rounded text-right text-sm outline-none focus:border-indigo-500">
             </div>
             <div class="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-lg">
