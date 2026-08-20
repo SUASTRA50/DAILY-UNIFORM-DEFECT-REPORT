@@ -484,6 +484,17 @@
           </button>
         </div>
       </form>
+      <div class="mt-6">
+        <h4 class="font-bold text-sm text-slate-700 mb-2 flex items-center gap-2"><i class="fa-solid fa-list"></i> Recent Received (50)</h4>
+        <div class="ud-table-wrap overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-left">
+            <thead class="bg-slate-50 text-[11px] uppercase font-bold text-slate-500">
+              <tr><th class="py-2.5 px-3">ID</th><th class="py-2.5 px-3">Date</th><th class="py-2.5 px-3">Input By</th><th class="py-2.5 px-3">Owner / Dept</th><th class="py-2.5 px-3">Item</th><th class="py-2.5 px-3">PO</th><th class="py-2.5 px-3">Supplier</th></tr>
+            </thead>
+            <tbody id="uniform-received-table-body" class="text-xs"></tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
     <section id="uniform-panel-production" class="uniform-binder-panel p-4 md:p-5">
@@ -615,6 +626,17 @@
           </button>
         </div>
       </form>
+      <div class="mt-6">
+        <h4 class="font-bold text-sm text-slate-700 mb-2 flex items-center gap-2"><i class="fa-solid fa-list"></i> Recent Production (50)</h4>
+        <div class="ud-table-wrap overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-left">
+            <thead class="bg-slate-50 text-[11px] uppercase font-bold text-slate-500">
+              <tr><th class="py-2.5 px-3">ID</th><th class="py-2.5 px-3">Date</th><th class="py-2.5 px-3">Input By</th><th class="py-2.5 px-3">Item</th><th class="py-2.5 px-3">Dept</th></tr>
+            </thead>
+            <tbody id="uniform-production-table-body" class="text-xs"></tbody>
+          </table>
+        </div>
+      </div>
     </section>
   </section>
 
@@ -706,6 +728,8 @@
 let state = {
   apiUrl: 'https://script.google.com/macros/s/AKfycbyVFBMpO942ygMaOhT9J0_Lz5awGX-eQd7el4JxjW8Hg1LpTM_2RU3FvdNPlhCbT4o/exec',
   tasks: [],
+  uniformReceived: [],
+  uniformProduction: [],
   currentTailorFilter: 'ALL'
 };
 
@@ -750,18 +774,69 @@ function autoFillCredit() {
 }
 
 async function refreshData() {
-  if (state.apiUrl) {
-    try {
-      const res = await fetch(`${state.apiUrl}?action=getTasks`);
-      const json = await res.json();
-      if (json.success) {
-        state.tasks = json.data;
-      }
-    } catch (e) {
-      console.error("API Fetch Error:", e);
-    }
+  if (!state.apiUrl) { renderAllViews(); return; }
+  try {
+    const [jsonTasks, jsonRcv, jsonPrd] = await Promise.all([
+      fetch(`${state.apiUrl}?action=getTasks`).then(r=>r.json()).catch(()=>({success:false})),
+      fetch(`${state.apiUrl}?action=getUniformReceived`).then(r=>r.json()).catch(()=>({success:false})),
+      fetch(`${state.apiUrl}?action=getUniformProduction`).then(r=>r.json()).catch(()=>({success:false}))
+    ]);
+    if (jsonTasks.success) state.tasks = jsonTasks.data || [];
+    if (jsonRcv.success) state.uniformReceived = jsonRcv.data || [];
+    if (jsonPrd.success) state.uniformProduction = jsonPrd.data || [];
+  } catch (e) {
+    console.error("API Fetch Error:", e);
   }
   renderAllViews();
+}
+
+
+function renderUniformReceivedTable(){
+  const tbody = document.getElementById('uniform-received-table-body');
+  if(!tbody) return;
+  tbody.innerHTML = '';
+  const list = state.uniformReceived || [];
+  if(list.length===0){
+    tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-xs text-slate-400">Belum ada data Received</td></tr>`;
+    return;
+  }
+  list.slice(0,50).forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.className = 'border-b border-slate-100 hover:bg-slate-50';
+    tr.innerHTML = `
+      <td class="py-2.5 px-3 font-mono text-xs font-bold text-blue-600">${r.uniqueID||'-'}</td>
+      <td class="py-2.5 px-3 text-xs text-slate-500">${r.createdAt||'-'}</td>
+      <td class="py-2.5 px-3 text-xs">${r.inputBy||'-'}</td>
+      <td class="py-2.5 px-3 text-xs font-medium">${r.uniformOwner||'-'}<div class="text-[11px] text-slate-500">${r.department||''}</div></td>
+      <td class="py-2.5 px-3 text-xs"><span class="font-medium">${r.uniformType||'-'}</span> x ${r.quantity||0}</td>
+      <td class="py-2.5 px-3 text-xs">${r.poNumber||'-'}</td>
+      <td class="py-2.5 px-3 text-xs">${r.supplierName||'-'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderUniformProductionTable(){
+  const tbody = document.getElementById('uniform-production-table-body');
+  if(!tbody) return;
+  tbody.innerHTML = '';
+  const list = state.uniformProduction || [];
+  if(list.length===0){
+    tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-xs text-slate-400">Belum ada data Production</td></tr>`;
+    return;
+  }
+  list.slice(0,50).forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.className = 'border-b border-slate-100 hover:bg-slate-50';
+    tr.innerHTML = `
+      <td class="py-2.5 px-3 font-mono text-xs font-bold text-indigo-600">${r.uniqueID||'-'}</td>
+      <td class="py-2.5 px-3 text-xs text-slate-500">${r.createdAt||'-'}</td>
+      <td class="py-2.5 px-3 text-xs">${r.inputBy||'-'}</td>
+      <td class="py-2.5 px-3 text-xs"><span class="font-medium">${r.uniformType||'-'}</span> x ${r.quantity||0}</td>
+      <td class="py-2.5 px-3 text-xs">${r.department||'-'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
 
 function showToast(msg){ const t=document.getElementById("toast"); if(!t) return; t.textContent=msg; t.classList.remove("hidden"); t.classList.add("flex"); clearTimeout(window._toastTimer); window._toastTimer=setTimeout(()=>{t.classList.add("hidden");}, 2500); }
@@ -770,6 +845,8 @@ function renderAllViews() {
   renderDashboard();
   renderUniformTable();
   renderTailorQueue();
+  renderUniformReceivedTable();
+  renderUniformProductionTable();
 }
 
 function renderDashboard() {
