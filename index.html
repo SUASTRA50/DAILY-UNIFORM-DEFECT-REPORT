@@ -127,6 +127,7 @@
 
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
+  <!-- DASHBOARD VIEW -->
   <section id="view-dashboard" class="tab-content active space-y-6">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
@@ -138,6 +139,7 @@
       </button>
     </div>
 
+    <!-- METRICS CARD -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
       <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm ud-section-card ud-metric">
         <div class="ud-metric-icon text-indigo-600"><i class="fa-solid fa-triangle-exclamation"></i></div>
@@ -171,6 +173,7 @@
       </div>
     </div>
 
+    <!-- RECENT ACTIVITY TABLE -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
         <h3 class="font-bold text-gray-800 text-base">Recent Activity</h3>
@@ -195,6 +198,7 @@
     </div>
   </section>
 
+  <!-- UNIFORM MODULE VIEW -->
   <section id="view-uniform" class="tab-content space-y-6">
     <div>
       <h2 class="text-xl font-bold text-slate-800">Uniform Management</h2>
@@ -206,6 +210,7 @@
       <button type="button" class="uniform-binder-tab" data-ut="production" onclick="switchUniformTab('production')"><i class="fa-solid fa-shirt mr-1"></i> Uniform Production</button>
     </div>
 
+    <!-- SUB-PANEL 1: DEFECTS -->
     <section id="uniform-panel-defect" class="uniform-binder-panel active p-0">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 p-4 md:p-5">
         <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-5">
@@ -374,6 +379,7 @@
       </div>
     </section>
 
+    <!-- SUB-PANEL 2: RECEIVED -->
     <section id="uniform-panel-received" class="uniform-binder-panel p-4 md:p-5">
       <div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 grid place-items-center"><i class="fa-solid fa-box-open"></i></div><div><h3 class="text-lg font-bold text-slate-800">Uniform Received</h3><p class="text-xs text-slate-500">Record every supplier delivery, including partial PO delivery.</p></div></div>
       <div class="uniform-form-note mb-4"><i class="fa-solid fa-circle-info mr-1"></i> Satu PO boleh memiliki banyak transaksi karena supplier dapat melakukan partial delivery.</div>
@@ -501,6 +507,7 @@
       </div>
     </section>
 
+    <!-- SUB-PANEL 3: PRODUCTION -->
     <section id="uniform-panel-production" class="uniform-binder-panel p-4 md:p-5">
       <div class="flex items-center gap-3 mb-4">
         <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 grid place-items-center">
@@ -644,6 +651,7 @@
     </section>
   </section>
 
+  <!-- TAILOR QUEUE VIEW -->
   <section id="view-tailor" class="tab-content space-y-6">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
       <div>
@@ -663,6 +671,7 @@
       </div>
     </div>
 
+    <!-- FILTER TABS -->
     <div class="flex space-x-2 border-b border-gray-200 pb-2 overflow-x-auto">
       <button onclick="filterTailorQueue('ALL')" id="tailor-filter-ALL" class="tailor-filter-btn px-4 py-2 rounded-lg text-xs font-bold bg-indigo-600 text-white">
         All Tasks
@@ -678,6 +687,7 @@
       </button>
     </div>
 
+    <!-- TASK GRID -->
     <div id="tailor-task-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
   </section>
 
@@ -686,6 +696,7 @@
   </div>
 </main>
 
+<!-- MODAL POPUP -->
 <div id="task-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
   <div class="bg-white rounded-xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
     <div class="flex justify-between items-center border-b pb-3">
@@ -730,7 +741,7 @@
 
 <script>
 let state = {
-  apiUrl: 'https://script.google.com/macros/s/AKfycbykTM8w-0CIR5x8g4ZD5tI8LtZ_PiExHxIJQioPOD3qmXxSZ84Kxwg9OcZ_zGP3OB0/exec',
+  apiUrl: 'https://script.google.com/macros/s/AKfycbykTM8w-0CIR5x8g4ZD5tI8LtZ_PiExHxIJQioPOD3qmXxSZ84Kxwg9OcZ_zGP3OB0/exec,
   tasks: [],
   uniformReceived: [],
   uniformProduction: [],
@@ -793,7 +804,6 @@ async function refreshData() {
   }
   renderAllViews();
 }
-
 
 function renderUniformReceivedTable(){
   const tbody = document.getElementById('uniform-received-table-body');
@@ -1172,9 +1182,7 @@ function uniformFormData(id){
   return o;
 }
 
-// PERBAIKAN PENTING: Struktur Payload diselaraskan dengan Google Apps Script
-
-// FIX JEDA: cegah double-click + refresh background + tanpa alert blocking lama
+// FUNGSI UTAMA PENGIRIMAN DATA (SUDAH DIPERBAIKI)
 async function postUniformTransaction(action, data, formId, btnId){
   const btn = document.getElementById(btnId);
   if(!btn) return;
@@ -1211,11 +1219,8 @@ async function postUniformTransaction(action, data, formId, btnId){
     if(result.success === false) throw new Error(result.message || 'Gagal menyimpan transaksi.');
     
     document.getElementById(formId).reset(); 
-    // langsung feedback tanpa nunggu refresh
-    // ganti alert dengan toast kecil biar gak block
-    if(typeof showToast === 'function'){ showToast('Berhasil disimpan! ' + (result.count||'')); }
-    else { console.log('Berhasil disimpan!'); }
-    refreshData(); // jangan await - biar UI langsung responsif
+    if(typeof showToast === 'function'){ showToast('Berhasil disimpan!'); }
+    refreshData(); 
   } catch(e){
     console.error("Submit Error:", e);
     alert('Error submitting: ' + e.message);
@@ -1228,11 +1233,9 @@ async function postUniformTransaction(action, data, formId, btnId){
   }
 }
 
-
 function submitUniformReceived(e){
   e.preventDefault();
   const data = uniformFormData('uniform-received-form');
-  // Tambahkan 'Table Cloth' dan ubah 'Cloth' menjadi 'Kitchen Cloth' (atau sertakan keduanya)
   const itemKeys = ['Trousers','Skirt','Shirt','Blouse','Jacket','Cook Jacket','T-Shirt','Polo Shirt','Apron','Hat','Dress','Vest','Kitchen Cloth','Table Cloth','Napkin'];
   const hasItem = itemKeys.some(k => Number(data[k]) > 0);
   if(!hasItem){
@@ -1245,7 +1248,6 @@ function submitUniformReceived(e){
 function submitUniformProduction(e){
   e.preventDefault();
   const data = uniformFormData('uniform-production-form');
-  // Tambahkan 'Table Cloth' dan ubah 'Cloth' menjadi 'Kitchen Cloth' (atau sertakan keduanya)
   const itemKeys = ['Trousers','Skirt','Shirt','Blouse','Jacket','Cook Jacket','T-Shirt','Polo Shirt','Apron','Hat','Dress','Vest','Kitchen Cloth','Table Cloth','Napkin'];
   const hasItem = itemKeys.some(k => Number(data[k]) > 0);
   if(!hasItem){
@@ -1255,18 +1257,16 @@ function submitUniformProduction(e){
   postUniformTransaction('createUniformProduction', data, 'uniform-production-form', 'btn-save-production');
 }
 
-// Service Worker Registration
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').then(reg => {
-      console.log('ServiceWorker registered with scope: ', reg.scope);
+      console.log('ServiceWorker registered:', reg.scope);
     }).catch(err => {
-      console.log('ServiceWorker registration failed: ', err);
+      console.log('ServiceWorker registration failed:', err);
     });
   });
 }
 </script>
 <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-sm px-5 py-2.5 rounded-full shadow-lg hidden z-[100] transition-all">Berhasil</div>
 </body>
-</html>'''
-
+</html>
