@@ -1232,6 +1232,7 @@ async function postUniformTransaction(action, data, formId, btnId){
 function submitUniformReceived(e){
   e.preventDefault();
   const data = uniformFormData('uniform-received-form');
+  // Tambahkan 'Table Cloth' dan ubah 'Cloth' menjadi 'Kitchen Cloth' (atau sertakan keduanya)
   const itemKeys = ['Trousers','Skirt','Shirt','Blouse','Jacket','Cook Jacket','T-Shirt','Polo Shirt','Apron','Hat','Dress','Vest','Kitchen Cloth','Table Cloth','Cloth','Napkin'];
   const hasItem = itemKeys.some(k => Number(data[k]) > 0);
   if(!hasItem){
@@ -1244,6 +1245,7 @@ function submitUniformReceived(e){
 function submitUniformProduction(e){
   e.preventDefault();
   const data = uniformFormData('uniform-production-form');
+  // Tambahkan 'Table Cloth' dan ubah 'Cloth' menjadi 'Kitchen Cloth' (atau sertakan keduanya)
   const itemKeys = ['Trousers','Skirt','Shirt','Blouse','Jacket','Cook Jacket','T-Shirt','Polo Shirt','Apron','Hat','Dress','Vest','Kitchen Cloth','Table Cloth','Cloth','Napkin'];
   const hasItem = itemKeys.some(k => Number(data[k]) > 0);
   if(!hasItem){
