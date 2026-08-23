@@ -13,6 +13,10 @@
 
 <title>Uniform Management</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -121,6 +125,15 @@
   body.dark .uniform-binder-tab.active { background:#1e293b; color:#f1f5f9; }
   body.dark .uniform-form-note { background:#1e293b; color:#93c5fd; }
   
+
+  .analytics-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:18px;box-shadow:0 4px 18px rgba(15,23,42,.06);margin-top:16px}
+  body.dark .analytics-card{background:#1e293b !important;border-color:#334155 !important}
+  .analytics-title{font-size:12px;font-weight:800;color:#172554;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  body.dark .analytics-title{color:#e2e8f0}
+  .chart-wrap{position:relative;height:300px} .chart-wrap.tall{height:360px} .chart-wrap.short{height:240px}
+  .kpi-mini{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px}
+  body.dark .kpi-mini{background:#0f172a !important}
+
 </style>
 </head>
 <body class="text-gray-800">
@@ -265,7 +278,41 @@
       </div>
     </div>
 
+    
+    <!-- ADDED: DASHBOARD ANALYTICS -->
+    <div id="dashboard-analytics-section" class="space-y-5">
+      <div class="flex justify-between items-center"><h3 class="font-bold text-sm"><i class="fa-solid fa-chart-line text-indigo-600 mr-2"></i>Graphic Analysis (Sesuai Filter Tanggal)</h3><div class="flex gap-2"><button onclick="exportDashboardPDF()" class="px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[11px] font-bold">PDF</button><button onclick="exportAllExcel()" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[11px] font-bold">Excel</button></div></div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div class="analytics-card" id="card-inputter"><div class="analytics-title"><span>a. Jumlah Penginput per Nama</span><span id="inputter-total-label" class="text-[10px] text-gray-400"></span></div><div class="chart-wrap"><canvas id="chartInputter"></canvas></div><div id="inputter-summary" class="mt-2 text-[11px] text-gray-500 bg-slate-50 p-2 rounded"></div></div>
+        <div class="analytics-card" id="card-defect"><div class="analytics-title"><span>b. Defect Paling Banyak</span><span id="defect-total-label" class="text-[10px] text-gray-400"></span></div><div class="chart-wrap"><canvas id="chartDefect"></canvas></div><div id="defect-summary" class="mt-2 text-[11px] text-gray-500 bg-slate-50 p-2 rounded"></div></div>
+      </div>
+    </div>
+
+
+    <!-- MOVED: TAILOR PERFORMANCE + RANKING BULANAN KE DASHBOARD ATAS RECENT LOG -->
+    <div id="tailor-performance-section" class="mt-8 space-y-5">
+      <div class="flex justify-between items-center"><h3 class="font-bold text-sm"><i class="fa-solid fa-award mr-2 text-amber-600"></i>Tailor Performance + Ranking Bulanan</h3><div class="flex gap-2 items-center"><label class="flex items-center gap-1 text-[11px] bg-white border px-2 py-1 rounded"><input type="checkbox" id="auto-refresh-toggle" onchange="toggleAutoRefresh(this.checked)"> Auto 30s <span id="auto-refresh-countdown" class="text-[10px] text-gray-400"></span></label><button onclick="exportAllExcel()" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[11px] font-bold">Excel</button><button onclick="exportTailorPDF()" class="px-3 py-1.5 bg-amber-600 text-white rounded-lg text-[11px] font-bold">PDF</button></div></div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div class="analytics-card"><div class="analytics-title">Completed per Tailor</div><div class="chart-wrap"><canvas id="chartTailorCompleted"></canvas></div></div>
+        <div class="analytics-card"><div class="analytics-title">Credit / Workload</div><div class="chart-wrap"><canvas id="chartTailorCredit"></canvas></div></div>
+        <div class="analytics-card"><div class="analytics-title">Status Distribusi</div><div class="chart-wrap"><canvas id="chartTailorStatus"></canvas></div><div id="tailor-leaderboard" class="mt-2 space-y-1"></div></div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div class="analytics-card"><div class="analytics-title">Trend per Bulan</div><div class="chart-wrap tall"><canvas id="chartTailorTrend"></canvas></div></div>
+        <div class="analytics-card"><div class="analytics-title">Detail Table</div><div class="overflow-auto max-h-[360px]"><table class="w-full text-[11px]"><thead class="text-[10px] uppercase text-gray-400 sticky top-0 bg-white"><tr><th class="text-left">Tailor</th><th class="text-center">Open</th><th class="text-center">Prog</th><th class="text-center">Done</th><th class="text-center">Credit</th><th class="text-center">Rate</th></tr></thead><tbody id="tailor-perf-table"></tbody></table></div></div>
+      </div>
+      <div id="tailor-monthly-ranking" class="space-y-4">
+        <div class="flex justify-between items-center"><h4 class="font-bold text-xs"><i class="fa-solid fa-trophy text-yellow-500 mr-1"></i>Ranking Bulanan</h4><select id="ranking-month-filter" onchange="renderMonthlyRanking()" class="border rounded px-2 py-1 text-[11px]"><option value="">Semua Bulan</option></select></div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div class="analytics-card"><div class="analytics-title">Top 3 Bulan Ini</div><div id="monthly-top3" class="space-y-2"></div><div class="chart-wrap short mt-2"><canvas id="chartMonthlyRanking"></canvas></div></div>
+          <div class="analytics-card lg:col-span-2"><div class="analytics-title">Credit per Bulan</div><div class="chart-wrap tall"><canvas id="chartMonthlyCredit"></canvas></div></div>
+        </div>
+        <div class="analytics-card"><div class="analytics-title">Tabel Ranking Lengkap</div><div class="overflow-auto max-h-[400px]"><table class="w-full text-[11px]"><thead class="text-[10px] uppercase text-gray-400 sticky top-0 bg-white"><tr><th>Bulan</th><th>Tailor</th><th class="text-center">Done</th></tr></thead><tbody id="monthly-ranking-table"></tbody></table></div></div>
+      </div>
+    </div>
+
     <!-- RECENT ACTIVITY TABBED TABLE (DIPERBARUI DENGAN PILIHAN TAB) -->
+ (DIPERBARUI DENGAN PILIHAN TAB) -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div class="flex items-center gap-2">
@@ -647,6 +694,17 @@
           </table>
         </div>
       </div>
+
+      <div id="received-analytics-section" class="mt-8 pt-6 border-t space-y-4">
+        <h3 class="font-bold text-sm"><i class="fa-solid fa-boxes-stacked mr-2 text-blue-600"></i>Analisis Received - Per Jenis & Departemen (Sesuai Filter)</h3>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div class="analytics-card lg:col-span-2"><div class="analytics-title">Per Jenis Uniform</div><div class="chart-wrap tall"><canvas id="chartReceivedByType"></canvas></div></div>
+          <div class="analytics-card"><div class="analytics-title">Per Departemen</div><div class="chart-wrap tall"><canvas id="chartReceivedByDept"></canvas></div></div>
+        </div>
+        <div class="analytics-card"><div class="analytics-title">Stacked Jenis vs Departemen</div><div class="chart-wrap tall"><canvas id="chartReceivedStacked"></canvas></div></div>
+        <div id="received-kpi" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+      </div>
+
     </section>
 
     <!-- SUB-PANEL 3: PRODUCTION -->
@@ -790,6 +848,20 @@
           </table>
         </div>
       </div>
+
+      <div id="production-analytics-section" class="mt-8 pt-6 border-t space-y-4">
+        <h3 class="font-bold text-sm"><i class="fa-solid fa-industry mr-2 text-emerald-600"></i>Analisis Production - Semua Product</h3>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div class="analytics-card"><div class="analytics-title">Per Jenis</div><div class="chart-wrap tall"><canvas id="chartProdByType"></canvas></div></div>
+          <div class="analytics-card lg:col-span-2"><div class="analytics-title">Trend per Bulan</div><div class="chart-wrap tall"><canvas id="chartProdTrend"></canvas></div></div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div class="analytics-card"><div class="analytics-title">By Departemen</div><div class="chart-wrap"><canvas id="chartProdByDept"></canvas></div></div>
+          <div class="analytics-card"><div class="analytics-title">Distribusi</div><div class="chart-wrap"><canvas id="chartProdDonut"></canvas></div><div id="prod-summary" class="mt-2 text-[11px] bg-slate-50 p-2 rounded"></div></div>
+        </div>
+        <div id="production-kpi" class="grid grid-cols-2 md:grid-cols-5 gap-3"></div>
+      </div>
+
     </section>
   </section>
 
@@ -831,7 +903,8 @@
 
     <!-- TASK GRID -->
     <div id="tailor-task-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-  </section>
+
+      </section>
 
   <div class="mt-5 text-center text-[10px] text-slate-400 tracking-wide">
     UNIFORM MANAGEMENT • Simple • Fast • Paperless
@@ -1594,7 +1667,119 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
+
+/* ===== ADDED ANALYTICS - SAFE HOOK, NO ORIGINAL CODE CHANGED ===== */
+let analyticsCharts={};
+function destroyAnalyticsChart(id){ if(analyticsCharts[id]){ try{analyticsCharts[id].destroy();}catch(e){} delete analyticsCharts[id]; } }
+let _analyticsRunning=false;
+function renderAddedAnalytics(){
+  if(_analyticsRunning) return; _analyticsRunning=true;
+  try{
+    const filtered = typeof getFilteredData==='function' ? getFilteredData() : {tasks: state.tasks||[], received: state.uniformReceived||[], production: state.uniformProduction||[]};
+    const tasks=filtered.tasks||[]; const receivedList=filtered.received||[]; const productionList=filtered.production||[];
+
+    // Inputter
+    const byInputter={}; const byDefect={}; const byInputterDefect={};
+    tasks.forEach(t=>{ const n=(t.reportingStaff||t.inputBy||'Unknown').trim(); byInputter[n]=(byInputter[n]||0)+1; const d=(t.defect||'Unknown').trim(); byDefect[d]=(byDefect[d]||0)+1; if(!byInputterDefect[n]) byInputterDefect[n]={}; byInputterDefect[n][d]=(byInputterDefect[n][d]||0)+1; });
+    const inputLabels=Object.keys(byInputter).sort((a,b)=>byInputter[b]-byInputter[a]);
+    const inputVals=inputLabels.map(k=>byInputter[k]);
+    const elI=document.getElementById('chartInputter'); if(elI){ destroyAnalyticsChart('inputter'); analyticsCharts['inputter']=new Chart(elI,{type:'bar', data:{labels:inputLabels, datasets:[{label:'Input', data:inputVals, backgroundColor:'#4f46e5', borderRadius:6}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}}); }
+    const elD=document.getElementById('chartDefect'); if(elD){ const dLabels=Object.keys(byDefect).sort((a,b)=>byDefect[b]-byDefect[a]).slice(0,8); destroyAnalyticsChart('defect'); analyticsCharts['defect']=new Chart(elD,{type:'doughnut', data:{labels:dLabels, datasets:[{data:dLabels.map(k=>byDefect[k]), backgroundColor:['#ef4444','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ec4899','#06b6d4','#f97316']}]}, options:{responsive:true, maintainAspectRatio:false, cutout:'60%', plugins:{legend:{position:'bottom'}}}}); document.getElementById('defect-summary').innerHTML = dLabels.length? `Terbanyak: <b>${dLabels[0]}</b> (${byDefect[dLabels[0]]}x)` : ''; }
+    document.getElementById('inputter-summary').innerHTML = inputLabels.length? `Top: <b>${inputLabels[0]}</b> (${inputVals[0]}) dari ${inputVals.reduce((a,b)=>a+b,0)}` : '';
+    const itLabel=document.getElementById('inputter-total-label'); if(itLabel) itLabel.textContent=inputVals.reduce((a,b)=>a+b,0)+' total';
+    const defLabel=document.getElementById('defect-total-label'); if(defLabel) defLabel.textContent=Object.values(byDefect).reduce((a,b)=>a+b,0)+' total';
+
+    // Received
+    const recByType={}, recByDept={}, recStack={};
+    receivedList.forEach(r=>{ const dept=r.department||'Unknown'; const type=r.uniformType||r.item||'Unknown'; const q=Number(r.quantity)||0; if(q<=0) return; recByType[type]=(recByType[type]||0)+q; recByDept[dept]=(recByDept[dept]||0)+q; if(!recStack[dept]) recStack[dept]={}; recStack[dept][type]=(recStack[dept][type]||0)+q; });
+    const recLabels=Object.keys(recByType).sort((a,b)=>recByType[b]-recByType[a]);
+    const cRT=document.getElementById('chartReceivedByType'); if(cRT&&recLabels.length){ destroyAnalyticsChart('recType'); analyticsCharts['recType']=new Chart(cRT,{type:'bar', data:{labels:recLabels, datasets:[{data:recLabels.map(k=>recByType[k]), backgroundColor:'#2563eb'}]}, options:{responsive:true, maintainAspectRatio:false, indexAxis:'y', plugins:{legend:{display:false}}}}); }
+    const cRD=document.getElementById('chartReceivedByDept'); if(cRD&&Object.keys(recByDept).length){ destroyAnalyticsChart('recDept'); analyticsCharts['recDept']=new Chart(cRD,{type:'pie', data:{labels:Object.keys(recByDept), datasets:[{data:Object.values(recByDept), backgroundColor:['#1e3a8a','#2563eb','#60a5fa','#93c5fd']}]}, options:{responsive:true, maintainAspectRatio:false}}); }
+    const cRS=document.getElementById('chartReceivedStacked'); if(cRS){ const depts=Object.keys(recStack); const datasets=recLabels.map((it,i)=>({label:it, data:depts.map(d=>recStack[d][it]||0), backgroundColor:`hsl(${i*30} 70% 55%)`})); destroyAnalyticsChart('recStack'); if(depts.length) analyticsCharts['recStack']=new Chart(cRS,{type:'bar', data:{labels:depts, datasets}, options:{responsive:true, maintainAspectRatio:false, scales:{x:{stacked:true}, y:{stacked:true}}}}); }
+    const recKpi=document.getElementById('received-kpi'); if(recKpi){ const total=Object.values(recByType).reduce((a,b)=>a+b,0); recKpi.innerHTML=Object.entries(recByDept).map(([d,v])=>`<div class="kpi-mini"><div class="text-[10px] font-bold text-blue-600">${d}</div><div class="font-bold">${v}</div></div>`).join('')+`<div class="bg-slate-900 text-white rounded-xl p-3"><div class="text-[10px]">TOTAL</div><div class="font-bold">${total}</div></div>`; }
+
+    // Production
+    const prodByType={}, prodByDept={}, prodByMonth={};
+    productionList.forEach(p=>{ const dept=p.department||'General'; const type=p.uniformType||p.item||'Unknown'; const q=Number(p.quantity)||0; if(q<=0) return; prodByType[type]=(prodByType[type]||0)+q; prodByDept[dept]=(prodByDept[dept]||0)+q; const m=(p.createdAt||p.date||'').slice(0,7); if(m){ prodByMonth[m]=(prodByMonth[m]||0)+q; } });
+    const prodLabels=Object.keys(prodByType).sort((a,b)=>prodByType[b]-prodByType[a]);
+    const cPT=document.getElementById('chartProdByType'); if(cPT&&prodLabels.length){ destroyAnalyticsChart('prodType'); analyticsCharts['prodType']=new Chart(cPT,{type:'bar', data:{labels:prodLabels, datasets:[{data:prodLabels.map(k=>prodByType[k]), backgroundColor:'#059669'}]}, options:{responsive:true, maintainAspectRatio:false}}); }
+    const cPTr=document.getElementById('chartProdTrend'); if(cPTr){ const months=Object.keys(prodByMonth).sort(); destroyAnalyticsChart('prodTrend'); if(months.length) analyticsCharts['prodTrend']=new Chart(cPTr,{type:'line', data:{labels:months, datasets:[{label:'Production', data:months.map(m=>prodByMonth[m]), borderColor:'#059669', backgroundColor:'rgba(5,150,105,.15)', fill:true, tension:.4}]}, options:{responsive:true, maintainAspectRatio:false}}); }
+    const cPD=document.getElementById('chartProdByDept'); if(cPD&&Object.keys(prodByDept).length){ destroyAnalyticsChart('prodDept'); analyticsCharts['prodDept']=new Chart(cPD,{type:'doughnut', data:{labels:Object.keys(prodByDept), datasets:[{data:Object.values(prodByDept), backgroundColor:['#065f46','#10b981','#6ee7b7']}]}, options:{responsive:true, maintainAspectRatio:false}}); }
+    const cPDo=document.getElementById('chartProdDonut'); if(cPDo&&prodLabels.length){ destroyAnalyticsChart('prodDonut'); analyticsCharts['prodDonut']=new Chart(cPDo,{type:'polarArea', data:{labels:prodLabels, datasets:[{data:prodLabels.map(k=>prodByType[k]), backgroundColor:prodLabels.map((_,i)=>`hsl(${140+i*20} 65% 55%)`)}]}, options:{responsive:true, maintainAspectRatio:false}}); }
+    const prodKpi=document.getElementById('production-kpi'); if(prodKpi){ const total=Object.values(prodByType).reduce((a,b)=>a+b,0); prodKpi.innerHTML=prodLabels.slice(0,4).map(k=>`<div class="kpi-mini"><div class="text-[10px] font-bold text-emerald-700">${k}</div><div class="font-bold">${prodByType[k]}</div></div>`).join('')+`<div class="bg-emerald-900 text-white rounded-xl p-3"><div class="text-[10px]">TOTAL</div><div class="font-bold">${total}</div></div>`; }
+
+    // Tailor Performance
+    const byTailor={};
+    tasks.forEach(t=>{ const name=(t.tailor||'Unassigned').trim()||'Unassigned'; if(!byTailor[name]) byTailor[name]={open:0,inprog:0,completed:0,credit:0,months:{}}; if(t.status==='OPEN') byTailor[name].open++; else if(t.status==='IN_PROGRESS') byTailor[name].inprog++; else if(t.status==='COMPLETED') byTailor[name].completed++; const cred=t.totalCredit!=null?Number(t.totalCredit):(Number(t.credit)||1)*(Number(t.quantity)||1); byTailor[name].credit+=cred; const m=(t.completedAt||t.createdAt||'').slice(0,7); if(m){ if(!byTailor[name].months[m]) byTailor[name].months[m]=0; if(t.status==='COMPLETED') byTailor[name].months[m]++; } });
+    const tailorNames=Object.keys(byTailor).filter(n=>n!=='Unassigned').sort((a,b)=>byTailor[b].completed - byTailor[a].completed);
+    const ctxTC=document.getElementById('chartTailorCompleted'); if(ctxTC&&tailorNames.length){ destroyAnalyticsChart('tailorCompleted'); analyticsCharts['tailorCompleted']=new Chart(ctxTC,{type:'bar', data:{labels:tailorNames, datasets:[{label:'Completed', data:tailorNames.map(n=>byTailor[n].completed), backgroundColor:'#f59e0b'},{label:'In Prog', data:tailorNames.map(n=>byTailor[n].inprog), backgroundColor:'#3b82f6'},{label:'Open', data:tailorNames.map(n=>byTailor[n].open), backgroundColor:'#e5e7eb'}]}, options:{responsive:true, maintainAspectRatio:false}}); }
+    const ctxCr=document.getElementById('chartTailorCredit'); if(ctxCr&&tailorNames.length){ destroyAnalyticsChart('tailorCredit'); analyticsCharts['tailorCredit']=new Chart(ctxCr,{type:'bar', data:{labels:tailorNames, datasets:[{data:tailorNames.map(n=>byTailor[n].credit), backgroundColor:'#4f46e5'}]}, options:{responsive:true, maintainAspectRatio:false, indexAxis:'y', plugins:{legend:{display:false}}}}); }
+    const ctxSt=document.getElementById('chartTailorStatus'); if(ctxSt&&tailorNames.length){ destroyAnalyticsChart('tailorStatus'); analyticsCharts['tailorStatus']=new Chart(ctxSt,{type:'doughnut', data:{labels:tailorNames, datasets:[{data:tailorNames.map(n=>byTailor[n].completed), backgroundColor:['#10b981','#f59e0b','#3b82f6']}]}, options:{responsive:true, maintainAspectRatio:false}}); }
+    const lb=document.getElementById('tailor-leaderboard'); if(lb){ lb.innerHTML=tailorNames.slice(0,3).map((n,i)=>{ const medal=['🥇','🥈','🥉'][i]; return `<div class="flex justify-between bg-slate-50 border rounded px-2 py-1 text-[11px]"><span>${medal} ${n}</span><span class="font-bold text-emerald-600">${byTailor[n].credit} cr</span></div>`; }).join(''); }
+    const ctxTr=document.getElementById('chartTailorTrend'); if(ctxTr){ const allMonths=[...new Set(tailorNames.flatMap(n=>Object.keys(byTailor[n].months)))].sort(); if(allMonths.length){ destroyAnalyticsChart('tailorTrend'); const datasets=tailorNames.slice(0,5).map((name,i)=>({label:name, data:allMonths.map(m=>byTailor[name].months[m]||0), borderColor:`hsl(${i*60} 70% 50%)`, tension:.3})); analyticsCharts['tailorTrend']=new Chart(ctxTr,{type:'line', data:{labels:allMonths, datasets}, options:{responsive:true, maintainAspectRatio:false}}); } }
+    const tbody=document.getElementById('tailor-perf-table'); if(tbody){ tbody.innerHTML=tailorNames.map(n=>{ const b=byTailor[n]; const total=b.open+b.inprog+b.completed; const rate=total?Math.round(b.completed/total*100):0; return `<tr class="border-b"><td class="py-1">${n}</td><td class="text-center">${b.open}</td><td class="text-center text-blue-600">${b.inprog}</td><td class="text-center text-emerald-600 font-bold">${b.completed}</td><td class="text-center font-bold">${b.credit}</td><td class="text-center"><span class="px-1.5 py-0.5 rounded-full text-[10px] ${rate>=80?'bg-emerald-100':''}">${rate}%</span></td></tr>`; }).join(''); }
+
+    // Monthly ranking
+    const byMonthTailor={}; tasks.filter(t=>t.status==='COMPLETED').forEach(t=>{ const month=(t.completedAt||t.createdAt||'').slice(0,7); if(!month) return; const tailor=(t.tailor||'Unknown').trim(); if(!byMonthTailor[month]) byMonthTailor[month]={}; if(!byMonthTailor[month][tailor]) byMonthTailor[month][tailor]={completed:0,credit:0}; byMonthTailor[month][tailor].completed++; const cred=t.totalCredit!=null?Number(t.totalCredit):(Number(t.credit)||1)*(Number(t.quantity)||1); byMonthTailor[month][tailor].credit+=cred; });
+    const months=Object.keys(byMonthTailor).sort(); const sel=document.getElementById('ranking-month-filter'); if(sel&&sel.options.length<=1){ months.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; sel.appendChild(o); }); }
+    const selectedMonth=sel?.value||''; const latestMonth=months[months.length-1];
+    const top3Div=document.getElementById('monthly-top3'); if(top3Div&&latestMonth){ const tailors=Object.entries(byMonthTailor[latestMonth]||{}).sort((a,b)=>b[1].credit-a[1].credit).slice(0,3); top3Div.innerHTML=tailors.map(([name,data],i)=>{ const medal=['🥇','🥈','🥉'][i]; return `<div class="flex justify-between bg-yellow-50 border rounded px-2 py-1 text-[11px]"><span>${medal} ${name}</span><span><b>${data.completed}</b> • ${data.credit} cr</span></div>`; }).join(''); }
+    const ctxMR=document.getElementById('chartMonthlyRanking'); if(ctxMR&&latestMonth){ const tailors=Object.entries(byMonthTailor[latestMonth]||{}).sort((a,b)=>b[1].credit-a[1].credit).slice(0,6); destroyAnalyticsChart('monthlyRanking'); analyticsCharts['monthlyRanking']=new Chart(ctxMR,{type:'bar', data:{labels:tailors.map(t=>t[0]), datasets:[{label:'Credit', data:tailors.map(t=>t[1].credit), backgroundColor:'#f59e0b'}]}, options:{responsive:true, maintainAspectRatio:false}}); }
+    const ctxMC=document.getElementById('chartMonthlyCredit'); if(ctxMC&&months.length){ const tailorNamesMonth=[...new Set(months.flatMap(m=>Object.keys(byMonthTailor[m]||{})))].slice(0,5); const datasets=tailorNamesMonth.map((name,i)=>({label:name, data:months.map(m=>byMonthTailor[m]?.[name]?.credit||0), borderColor:`hsl(${i*70} 70% 50%)`, tension:.3})); destroyAnalyticsChart('monthlyCredit'); analyticsCharts['monthlyCredit']=new Chart(ctxMC,{type:'line', data:{labels:months, datasets}, options:{responsive:true, maintainAspectRatio:false}}); }
+    const mBody=document.getElementById('monthly-ranking-table'); if(mBody){ const rows=[]; (selectedMonth?[selectedMonth]:months).forEach(month=>{ const entries=Object.entries(byMonthTailor[month]||{}).sort((a,b)=>b[1].credit-a[1].credit); entries.forEach(([tailor,data],idx)=>{ const rank=idx+1; const bonus=rank===1?100:rank===2?50:rank===3?25:0; rows.push(`<tr class="border-b"><td class="py-1.5">${month}</td><td class="py-1.5 font-medium">${tailor}</td><td class="text-center font-bold text-emerald-600">${data.completed}</td></tr>`); }); }); mBody.innerHTML=rows.join('')||'<tr><td colspan=3 class="text-center py-3 text-gray-400">Tidak ada data</td></tr>'; }
+
+  }catch(e){ console.error('Analytics error',e); }
+  finally{ _analyticsRunning=false; }
+}
+
+// Safe wrapper for original functions
+(function(){
+  const origDash = window.renderDashboard;
+  if(origDash){
+    window.renderDashboard = function(){ try{ origDash.apply(this,arguments); }catch(e){ console.error(e);} setTimeout(renderAddedAnalytics,100); };
+  }
+  const origAll = window.renderAllViews;
+  if(origAll){
+    window.renderAllViews = function(){ try{ origAll.apply(this,arguments); }catch(e){} setTimeout(renderAddedAnalytics,150); };
+  }
+  const origTailor = window.renderTailorQueue;
+  if(origTailor){
+    window.renderTailorQueue = function(){ try{ origTailor.apply(this,arguments); }catch(e){} setTimeout(renderAddedAnalytics,100); };
+  }
+})();
+
+let autoRefreshInterval=null;
+function toggleAutoRefresh(enabled){
+  if(autoRefreshInterval) clearInterval(autoRefreshInterval);
+  const label=document.getElementById('auto-refresh-countdown');
+  if(!enabled){ if(label) label.textContent=''; return; }
+  let c=30; if(label) label.textContent='(30s)';
+  autoRefreshInterval=setInterval(()=>{ c--; if(label) label.textContent=`(${c}s)`; if(c<=0){ c=30; if(typeof refreshData==='function') refreshData(); } },1000);
+}
+
+async function exportDashboardPDF(){ const {jsPDF}=window.jspdf; const doc=new jsPDF('p','mm','a4'); doc.text('Dashboard Analytics',10,15); const el=document.getElementById('dashboard-analytics-section'); if(!el) return; const canvas=await html2canvas(el,{scale:2}); const img=canvas.toDataURL('image/png'); doc.addImage(img,'PNG',10,20,190, canvas.height*190/canvas.width); doc.save('Dashboard.pdf'); }
+async function exportTailorPDF(){ const {jsPDF}=window.jspdf; const doc=new jsPDF('l','mm','a4'); doc.text('Tailor Performance',10,15); const el=document.getElementById('tailor-performance-section'); const canvas=await html2canvas(el,{scale:1.2}); const img=canvas.toDataURL('image/png'); doc.addImage(img,'PNG',10,20,277, canvas.height*277/canvas.width); doc.save('Tailor.pdf'); }
+function exportAllExcel(){
+  const wb=XLSX.utils.book_new();
+  const filtered = typeof getFilteredData==='function' ? getFilteredData() : {tasks: state.tasks||[], received: state.uniformReceived||[], production: state.uniformProduction||[]};
+  const tasks=filtered.tasks||[];
+  const byInputter={}; const byDefect={}; tasks.forEach(t=>{ const n=(t.reportingStaff||t.inputBy||'Unknown'); byInputter[n]=(byInputter[n]||0)+1; const d=(t.defect||'Unknown'); byDefect[d]=(byDefect[d]||0)+1; });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(Object.entries(byInputter).map(([k,v])=>({Nama:k, Jumlah:v}))), 'Inputter');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(Object.entries(byDefect).map(([k,v])=>({Defect:k, Jumlah:v}))), 'Defect');
+  const recByType={}; (filtered.received||[]).forEach(r=>{ const t=r.uniformType||'Unknown'; const q=Number(r.quantity)||0; recByType[t]=(recByType[t]||0)+q; });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(Object.entries(recByType).map(([k,v])=>({Jenis:k, Qty:v}))), 'Received');
+  const prodByType={}; (filtered.production||[]).forEach(p=>{ const t=p.uniformType||'Unknown'; const q=Number(p.quantity)||0; prodByType[t]=(prodByType[t]||0)+q; });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(Object.entries(prodByType).map(([k,v])=>({Product:k, Qty:v}))), 'Production');
+  const byTailor={}; tasks.forEach(t=>{ const tl=t.tailor||'Unassigned'; if(!byTailor[tl]) byTailor[tl]={completed:0,credit:0}; if(t.status==='COMPLETED') byTailor[tl].completed++; const cred=t.totalCredit!=null?Number(t.totalCredit):(Number(t.credit)||1); byTailor[tl].credit+=cred; });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(Object.entries(byTailor).map(([k,v])=>({Tailor:k, Completed:v.completed, Credit:v.credit}))), 'Tailor');
+  XLSX.writeFile(wb, 'Analytics-'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+function renderMonthlyRanking(){ renderAddedAnalytics(); }
+function exportTailorMonthlyExcel(){ exportAllExcel(); }
+
+window.addEventListener('load', ()=>{ setTimeout(renderAddedAnalytics, 1000); });
+
 </script>
 <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-sm px-5 py-2.5 rounded-full shadow-lg hidden z-[100] transition-all">Berhasil</div>
 </body>
-</html>
+</
