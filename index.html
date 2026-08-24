@@ -148,6 +148,33 @@
   .chart-wrap { height: 260px !important; }
   @media(max-width:767px){ .chart-wrap.tall{height:260px !important} .chart-wrap{height:220px !important} }
 
+
+@media(max-width:768px){
+  #mobile-date-grid{display:grid !important; grid-template-columns:1fr 1fr !important; gap:8px !important;}
+  #metrics-grid{grid-template-columns:repeat(2, minmax(0,1fr)) !important;}
+  .kpi-grid-mobile{grid-template-columns:repeat(2, minmax(0,1fr)) !important;}
+}
+
+
+
+/* MOBILE ONLY - KPI 2 KOLOM HP TANPA MERUSAK WEB */
+@media(max-width: 640px){
+  #metrics-grid{
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+}
+
+
+@media(max-width: 768px){
+  /* Tanggal 1 baris 2 kolom di HP */
+  #filter-section-date-grid{
+    display:grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+}
+
 </style>
 </head>
 <body class="text-gray-800">
@@ -208,14 +235,12 @@
         <h2 class="text-2xl font-bold text-gray-900">Operational Dashboard</h2>
         <p class="text-sm text-gray-500">Activity Summary & Real-time Google Sheets Sync.</p>
       </div>
-      <button onclick="refreshData()" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm btn-animate-click">
-        <i class="fa-solid fa-rotate mr-2"></i> Refresh Data
-      </button>
+      
     </div>
 
     <!-- FILTER RANGE TANGGAL DASHBOARD -->
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex flex-col md:flex-row md:items-end gap-3">
-      <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div id="filter-section-date-grid" class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1"><i class="fa-regular fa-calendar mr-1"></i> Tanggal Mulai</label>
           <input type="date" id="filter-start-date" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
@@ -232,6 +257,9 @@
         <button onclick="resetDashboardDateFilter()" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-semibold rounded-lg shadow-sm btn-animate-click">
           <i class="fa-solid fa-rotate-left mr-2"></i> Reset
         </button>
+              <button onclick="refreshData()" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm btn-animate-click">
+        <i class="fa-solid fa-rotate mr-2"></i> Refresh Data
+      </button>
       </div>
       <div id="filter-info" class="hidden md:flex items-center text-xs text-indigo-600 font-medium bg-indigo-50 border border-indigo-100 rounded-full px-3 py-1">
         <i class="fa-solid fa-circle-info mr-1.5"></i><span id="filter-info-text"></span>
@@ -239,7 +267,7 @@
     </div>
 
     <!-- METRICS CARD (DIPERBARUI - TAMBAH IN PROGRESS) -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
+    <div id="metrics-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
       <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm ud-section-card ud-metric">
         <div class="ud-metric-icon text-indigo-600"><i class="fa-solid fa-triangle-exclamation"></i></div>
         <div class="text-xs font-semibold uppercase text-gray-400">Total Defects</div>
@@ -283,13 +311,7 @@
         <div class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-truck-ramp-box mr-1"></i> Total Received Items</div>
       </div>
 
-      <!-- METRIC BARU: TOTAL PRODUCTION -->
-      <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm border-l-4 border-l-teal-500 ud-section-card ud-metric">
-        <div class="ud-metric-icon text-teal-600"><i class="fa-solid fa-shirt"></i></div>
-        <div class="text-xs font-semibold uppercase text-teal-600">Total Production</div>
-        <div class="text-2xl font-bold text-teal-600 mt-1" id="stat-production-items">0</div>
-        <div class="text-xs text-gray-500 mt-2"><i class="fa-solid fa-scissors mr-1"></i> Total Produced Items</div>
-      </div>
+      
     </div>
 
     
@@ -304,6 +326,17 @@
 
 
     <!-- MOVED: TAILOR PERFORMANCE + RANKING BULANAN KE DASHBOARD ATAS RECENT LOG -->
+    <div id="received-analytics-section" class="mt-8 pt-6 border-t space-y-4">
+        <h3 class="font-bold text-sm"><i class="fa-solid fa-boxes-stacked mr-2 text-blue-600"></i>Analisis Received - Per Jenis & Departemen (Sesuai Filter)</h3>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div class="analytics-card lg:col-span-2"><div class="analytics-title">Per Jenis Uniform</div><div class="chart-wrap tall"><canvas id="chartReceivedByType"></canvas></div></div>
+          <div class="analytics-card"><div class="analytics-title">Per Departemen</div><div class="chart-wrap tall"><canvas id="chartReceivedByDept"></canvas></div></div>
+        </div>
+        <div class="analytics-card"><div class="analytics-title">Stacked Jenis vs Departemen</div><div class="chart-wrap tall"><canvas id="chartReceivedStacked"></canvas></div></div>
+        <div id="received-kpi" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+      </div>
+
+    <!-- MOVED RECEIVED ABOVE TAILOR -->
     <div id="tailor-performance-section" class="mt-8 space-y-5">
       <div class="flex justify-between items-center"><h3 class="font-bold text-sm"><i class="fa-solid fa-award mr-2 text-amber-600"></i>Tailor Performance + Ranking Bulanan</h3><div class="flex gap-2 items-center"><label class="flex items-center gap-1 text-[11px] bg-white border px-2 py-1 rounded"><input type="checkbox" id="auto-refresh-toggle" onchange="toggleAutoRefresh(this.checked)"> Auto 30s <span id="auto-refresh-countdown" class="text-[10px] text-gray-400"></span></label></div></div>
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -346,78 +379,7 @@
 
     <!-- RECENT ACTIVITY TABBED TABLE (DIPERBARUI DENGAN PILIHAN TAB) -->
  (DIPERBARUI DENGAN PILIHAN TAB) -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div class="flex items-center gap-2">
-          <h3 class="font-bold text-gray-800 text-base">Recent Activity Log</h3>
-          <span class="text-xs bg-indigo-50 text-indigo-700 font-semibold px-2.5 py-1 rounded-full border border-indigo-100">Live Sheets Sync</span>
-        </div>
-        <!-- Sub-tab switcher untuk dashboard -->
-        <div class="flex bg-slate-100 p-1 rounded-lg space-x-1 border">
-          <button onclick="switchDashboardTable('defect')" id="dash-tab-defect" class="dash-tab-btn active">
-            <i class="fa-solid fa-triangle-exclamation mr-1"></i> Report Defect
-          </button>
-          <button onclick="switchDashboardTable('received')" id="dash-tab-received" class="dash-tab-btn">
-            <i class="fa-solid fa-box-open mr-1"></i> Uniform Received
-          </button>
-          <button onclick="switchDashboardTable('production')" id="dash-tab-production" class="dash-tab-btn">
-            <i class="fa-solid fa-shirt mr-1"></i> Uniform Production
-          </button>
-        </div>
-      </div>
-
-      <!-- TABEL 1: DEFECT REPORT -->
-      <div id="dash-view-defect" class="overflow-x-auto ud-table-wrap">
-        <table class="w-full text-left border-collapse text-sm">
-          <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold border-b">
-            <tr>
-              <th class="py-3 px-4">Unique ID</th>
-              <th class="py-3 px-4">Date / Time</th>
-              <th class="py-3 px-4">Input By</th>
-              <th class="py-3 px-4">Owner & Dept</th>
-              <th class="py-3 px-4">Item & Defect</th>
-              <th class="py-3 px-4">Status</th>
-              <th class="py-3 px-4">Tailor</th>
-            </tr>
-          </thead>
-          <tbody id="dashboard-recent-table" class="divide-y divide-gray-100"></tbody>
-        </table>
-      </div>
-
-      <!-- TABEL 2: UNIFORM RECEIVED -->
-      <div id="dash-view-received" class="overflow-x-auto ud-table-wrap hidden">
-        <table class="w-full text-left border-collapse text-sm">
-          <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold border-b">
-            <tr>
-              <th class="py-3 px-4">Unique ID</th>
-              <th class="py-3 px-4">Date / Time</th>
-              <th class="py-3 px-4">Input By</th>
-              <th class="py-3 px-4">Owner & Dept</th>
-              <th class="py-3 px-4">Item & Quantity</th>
-              <th class="py-3 px-4">PO Number</th>
-              <th class="py-3 px-4">Supplier</th>
-            </tr>
-          </thead>
-          <tbody id="dashboard-received-table" class="divide-y divide-gray-100"></tbody>
-        </table>
-      </div>
-
-      <!-- TABEL 3: UNIFORM PRODUCTION -->
-      <div id="dash-view-production" class="overflow-x-auto ud-table-wrap hidden">
-        <table class="w-full text-left border-collapse text-sm">
-          <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold border-b">
-            <tr>
-              <th class="py-3 px-4">Unique ID</th>
-              <th class="py-3 px-4">Date / Time</th>
-              <th class="py-3 px-4">Input By</th>
-              <th class="py-3 px-4">Department</th>
-              <th class="py-3 px-4">Item & Quantity</th>
-            </tr>
-          </thead>
-          <tbody id="dashboard-production-table" class="divide-y divide-gray-100"></tbody>
-        </table>
-      </div>
-    </div>
+    
   </section>
 
   <!-- UNIFORM MODULE VIEW -->
@@ -728,15 +690,7 @@
         </div>
       </div>
 
-      <div id="received-analytics-section" class="mt-8 pt-6 border-t space-y-4">
-        <h3 class="font-bold text-sm"><i class="fa-solid fa-boxes-stacked mr-2 text-blue-600"></i>Analisis Received - Per Jenis & Departemen (Sesuai Filter)</h3>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <div class="analytics-card lg:col-span-2"><div class="analytics-title">Per Jenis Uniform</div><div class="chart-wrap tall"><canvas id="chartReceivedByType"></canvas></div></div>
-          <div class="analytics-card"><div class="analytics-title">Per Departemen</div><div class="chart-wrap tall"><canvas id="chartReceivedByDept"></canvas></div></div>
-        </div>
-        <div class="analytics-card"><div class="analytics-title">Stacked Jenis vs Departemen</div><div class="chart-wrap tall"><canvas id="chartReceivedStacked"></canvas></div></div>
-        <div id="received-kpi" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
-      </div>
+      
 
     </section>
 
@@ -1124,13 +1078,13 @@ function switchTab(tabName) {
 
 // FUNGSI KHUSUS UNTUK MEMINDAHKAN TABEL PADA DASHBOARD
 function switchDashboardTable(tabName) {
-  document.getElementById('dash-view-defect').classList.add('hidden');
-  document.getElementById('dash-view-received').classList.add('hidden');
-  document.getElementById('dash-view-production').classList.add('hidden');
+  const dv1=document.getElementById('dash-view-defect'); if(dv1) dv1.classList.add('hidden');
+  const dv2=document.getElementById('dash-view-received'); if(dv2) dv2.classList.add('hidden');
+  const dv3=document.getElementById('dash-view-production'); if(dv3) dv3.classList.add('hidden');
 
-  document.getElementById('dash-tab-defect').classList.remove('active');
-  document.getElementById('dash-tab-received').classList.remove('active');
-  document.getElementById('dash-tab-production').classList.remove('active');
+  const dt1=document.getElementById('dash-tab-defect'); if(dt1) dt1.classList.remove('active');
+  const dt2=document.getElementById('dash-tab-received'); if(dt2) dt2.classList.remove('active');
+  const dt3=document.getElementById('dash-tab-production'); if(dt3) dt3.classList.remove('active');
 
   document.getElementById(`dash-view-${tabName}`).classList.remove('hidden');
   document.getElementById(`dash-tab-${tabName}`).classList.add('active');
@@ -1835,5 +1789,22 @@ window.renderAddedAnalytics = function(){ if(typeof _origRenderAdded2==='functio
 
 </script>
 <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-sm px-5 py-2.5 rounded-full shadow-lg hidden z-[100] transition-all">Berhasil</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const s=document.getElementById('filter-start-date');
+  const e=document.getElementById('filter-end-date');
+  if(s&&e){
+    const ps=s.closest('div'); const pe=e.closest('div');
+    if(ps&&pe&&ps.parentElement&&!document.getElementById('mobile-date-grid')){
+      const w=document.createElement('div'); w.id='mobile-date-grid'; w.className='grid grid-cols-2 gap-2 mb-2';
+      w.style.display='grid'; w.style.gridTemplateColumns='1fr 1fr';
+      ps.parentElement.insertBefore(w, ps); w.appendChild(ps); w.appendChild(pe);
+    }
+  }
+  // TOTAL PRODUCTION card removed per request
+});
+</script>
+
 </body>
 </html>
