@@ -873,18 +873,7 @@
         </div>
       </div>
 
-      <div id="production-analytics-section" class="mt-8 pt-6 border-t space-y-4">
-        <h3 class="font-bold text-sm"><i class="fa-solid fa-industry mr-2 text-emerald-600"></i>Analisis Production - Semua Product</h3>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <div class="analytics-card"><div class="analytics-title">Per Jenis</div><div class="chart-wrap tall"><canvas id="chartProdByType"></canvas></div></div>
-          <div class="analytics-card lg:col-span-2"><div class="analytics-title">Trend per Bulan</div><div class="chart-wrap tall"><canvas id="chartProdTrend"></canvas></div></div>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <div class="analytics-card"><div class="analytics-title">By Departemen</div><div class="chart-wrap"><canvas id="chartProdByDept"></canvas></div></div>
-          <div class="analytics-card"><div class="analytics-title">Distribusi</div><div class="chart-wrap"><canvas id="chartProdDonut"></canvas></div><div id="prod-summary" class="mt-2 text-[11px] bg-slate-50 p-2 rounded"></div></div>
-        </div>
-        <div id="production-kpi" class="grid grid-cols-2 md:grid-cols-5 gap-3"></div>
-      </div>
+      
 
     </section>
   </section>
@@ -1024,23 +1013,51 @@ function parseDateValue(val){
 }
 function parseDataDate(str){
   if(!str) return null;
-  // Try direct Date parse
-  let d = new Date(str);
-  if(!isNaN(d)) { d.setHours(0,0,0,0); return d; }
-  // Try DD/MM/YYYY or DD-MM-YYYY
-  const m = str.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-  if(m){
-    let day = parseInt(m[1],10), month = parseInt(m[2],10)-1, year = parseInt(m[3],10);
-    if(year<100) year+=2000;
-    d = new Date(year, month, day);
-    if(!isNaN(d)) { d.setHours(0,0,0,0); return d; }
+  // If already Date
+  if(str instanceof Date){ 
+    const d = new Date(str); d.setHours(0,0,0,0); return isNaN(d)?null:d; 
   }
+  // Try direct parse first (ISO, MM/DD/YYYY, etc)
+  let d = new Date(str);
+  if(!isNaN(d)){ d.setHours(0,0,0,0); return d; }
+  
+  // Clean string
+  const s = String(str).trim();
+  
+  // Try DD/MM/YYYY or DD-MM-YYYY or MM/DD/YYYY - detect by checking if first part >12
+  const m = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if(m){
+    let p1 = parseInt(m[1],10), p2 = parseInt(m[2],10), y = parseInt(m[3],10);
+    if(y<100) y+=2000;
+    // If p1 >12, assume DD/MM, else try MM/DD first then DD/MM
+    let day, month;
+    if(p1>12){ day=p1; month=p2-1; }
+    else if(p2>12){ day=p2; month=p1-1; }
+    else { // ambiguous, try DD/MM as common in ID
+      day=p1; month=p2-1;
+    }
+    d = new Date(y, month, day);
+    if(!isNaN(d)){ d.setHours(0,0,0,0); return d; }
+    // Try alternative
+    d = new Date(y, p1-1, p2);
+    if(!isNaN(d)){ d.setHours(0,0,0,0); return d; }
+  }
+  
+  // Try YYYY-MM-DD
+  const m2 = s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  if(m2){
+    let y=parseInt(m2[1],10), mo=parseInt(m2[2],10)-1, da=parseInt(m2[3],10);
+    d = new Date(y, mo, da);
+    if(!isNaN(d)){ d.setHours(0,0,0,0); return d; }
+  }
+  
   return null;
 }
 function isWithinDateRange(dataDateStr, start, end){
   if(!start && !end) return true;
+  if(!dataDateStr) return true;
   const d = parseDataDate(dataDateStr);
-  if(!d) return true; // if unparseable, show it
+  if(!d) return true; // if unparseable, show it to avoid data loss
   if(start && d < start) return false;
   if(end){
     const endInclusive = new Date(end); endInclusive.setHours(23,59,59,999);
@@ -1052,9 +1069,15 @@ function getFilteredData(){
   const start = state.dashboardDateFilter.start;
   const end = state.dashboardDateFilter.end;
   if(!start && !end) return { tasks: state.tasks||[], received: state.uniformReceived||[], production: state.uniformProduction||[] };
-  const tasks = (state.tasks||[]).filter(t => isWithinDateRange(t.createdAt||t.date||'', start, end));
-  const received = (state.uniformReceived||[]).filter(r => isWithinDateRange(r.createdAt||r.date||'', start, end));
-  const production = (state.uniformProduction||[]).filter(p => isWithinDateRange(p.createdAt||p.date||'', start, end));
+  
+  function getDateStr(obj){
+    // Try multiple possible date fields from Sheets
+    return obj.createdAt || obj.date || obj.timestamp || obj.Timestamp || obj.TIMESTAMP || obj.receivedAt || obj.receivedDate || obj.productionDate || obj.prodDate || obj.Date || obj['Created At'] || obj['Tanggal'] || '';
+  }
+  
+  const tasks = (state.tasks||[]).filter(t => isWithinDateRange(getDateStr(t), start, end));
+  const received = (state.uniformReceived||[]).filter(r => isWithinDateRange(getDateStr(r), start, end));
+  const production = (state.uniformProduction||[]).filter(p => isWithinDateRange(getDateStr(p), start, end));
   return { tasks, received, production };
 }
 function applyDashboardDateFilter(){
