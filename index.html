@@ -302,6 +302,9 @@
       </div>
     </div>
 
+    <!-- MATRIX PRODUCTION REPORT - FILTER DEPARTEMEN KHUSUS + EXCEL ICON (TAMBAHAN BARU, TIDAK UBAH CODE LAIN) -->
+    
+
 
     <!-- METRICS CARD (DIPERBARUI - TAMBAH IN PROGRESS) -->
     <div id="metrics-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
@@ -388,6 +391,23 @@
     <!-- ADDED: UNIFORM PRODUCTION ANALYTICS DI DASHBOARD BAWAH TAILOR PERFORMANCE -->
     <div id="dashboard-production-analytics" class="space-y-5 mt-6">
       <h3 class="font-bold text-sm text-slate-800"><i class="fa-solid fa-industry mr-2 text-emerald-600"></i>Analisis Uniform Production - Semua Product (Dashboard View)</h3>
+      <div class="bg-white rounded-xl border border-emerald-300 shadow-sm p-4 mt-3 mb-4" id="matrix-filter-section" style="background:#f0fdfa;">
+        <div class="flex flex-col md:flex-row md:items-end gap-3">
+          <div class="flex-1">
+            <label class="block text-[11px] font-bold uppercase text-emerald-700 mb-1">▼ FILTER DEPARTEMEN KHUSUS MATRIX PRODUCTION (UNIFORM PRODUCTION)</label>
+            <select id="filter-matrix-department" class="w-full border border-emerald-300 rounded-lg px-3 py-2 text-sm bg-white">
+              <option value="">Semua Department</option>
+            </select>
+            <p class="text-[10px] text-gray-500 mt-1" id="matrix-info">Mengikuti filter tanggal dashboard di atas. Klik Refresh Data dulu jika department kosong.</p>
+          </div>
+          <div>
+            <button type="button" id="btnExcelMatrix" onclick="downloadProductionMatrixExcel()" class="inline-flex items-center px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg">
+              <i class="fa-solid fa-file-excel mr-2"></i> Download Excel Matrix
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div class="analytics-card">
           <div class="analytics-title">Total Production per Jenis (Bar)</div>
@@ -1915,6 +1935,233 @@ function setDatePreset(preset){
     applyDashboardDateFilter();
   }
 }
+</script>
+
+
+<!-- MATRIX REPORT EXCEL DOWNLOAD - TAMBAHAN BARU -->
+<script>
+// Isi dropdown departemen khusus matrix dari Uniform Production
+function populateMatrixDeptFilter(){
+  try{
+    const prod = (typeof state !== 'undefined' && state.uniformProduction) ? state.uniformProduction : [];
+    const depts = [...new Set(prod.map(p=> (p.department||p.dept||'').trim()).filter(Boolean))].sort();
+    const sel = document.getElementById('filter-matrix-department');
+    if(!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Semua Department</option>' + depts.map(d=> `<option value="${d}">${d}</option>`).join('');
+    if(cur) sel.value = cur;
+  }catch(e){ console.log('matrix dept filter error', e); }
+}
+
+// Hook populate setelah data load - tidak ubah fungsi lain, hanya tambah listener
+(function(){
+  const _oldRender = window.renderDashboard;
+  if(typeof _oldRender === 'function'){
+    window.renderDashboard = function(){
+      _oldRender();
+      setTimeout(populateMatrixDeptFilter, 300);
+    };
+  }
+  // juga populate saat load
+  document.addEventListener('DOMContentLoaded', ()=> setTimeout(populateMatrixDeptFilter, 1000));
+  // jika state berubah (setelah refreshData)
+  const _oldRefresh = window.refreshData;
+  if(typeof _oldRefresh === 'function'){
+    window.refreshData = async function(){
+      const r = await _oldRefresh();
+      setTimeout(populateMatrixDeptFilter, 800);
+      return r;
+    };
+  }
+})();
+
+function downloadProductionMatrixExcel(){
+  try{
+    // 1. Ambil data Uniform Production dari state global (tidak ubah logic lain)
+    const prodAll = (typeof state !== 'undefined' && state.uniformProduction) ? state.uniformProduction : [];
+    if(!prodAll.length){ alert('Data Uniform Production kosong. Refresh data dulu.'); return; }
+
+    // 2. Ambil filter tanggal dari aplikasi (filter-start-date & filter-end-date) - MENGIKUTI FILTER TANGGAL DI APLIKASI
+    const sEl = document.getElementById('filter-start-date');
+    const eEl = document.getElementById('filter-end-date');
+    const deptMatrixEl = document.getElementById('filter-matrix-department');
+    const deptMatrix = deptMatrixEl ? deptMatrixEl.value.trim() : '';
+
+    let startStr = sEl && sEl.value ? sEl.value : '';
+    let endStr = eEl && eEl.value ? eEl.value : '';
+
+    // Filter data
+    let filtered = prodAll.filter(p=>{
+      const dStr = (p.date || p.productionDate || p.createdAt || '').slice(0,10);
+      if(!dStr) return false;
+      if(startStr && dStr < startStr) return false;
+      if(endStr && dStr > endStr) return false;
+      if(deptMatrix && (p.department||p.dept||'').trim() !== deptMatrix) return false;
+      return true;
+    });
+
+    if(!filtered.length){
+      alert('Tidak ada data Production untuk filter tanggal '+(startStr||'awal')+' s/d '+(endStr||'akhir')+(deptMatrix? ' department '+deptMatrix:'')+'. Coba ubah filter.');
+      return;
+    }
+
+    // 3. Urutan baris sesuai screenshot: Trousers, Shirt, Skirt, Blouse, Jacket, Dress, Vest, Polo Shirt, Cook Jacket, Napkin, Kitchen Cloth, Apron, Table Cloth
+    const order = ["Trousers","Shirt","Skirt","Blouse","Jacket","Dress","Vest","Polo Shirt","Cook Jacket","Napkin","Kitchen Cloth","Apron","Table Cloth"];
+    const typesInData = [...new Set(filtered.map(p=> (p.uniformType||p.item||'').trim()).filter(Boolean))];
+    // tampilkan hanya yang ada data + urutan screenshot
+    const allTypes = [...order.filter(t=> typesInData.includes(t)), ...typesInData.filter(t=> !order.includes(t))];
+    // Jika ingin selalu tampil 13 baris meski kosong, ganti baris di atas dengan: const allTypes = order;
+
+    // 4. Build daftar tanggal sesuai filter (jika filter kosong, pakai tanggal unik dari data)
+    let dateList = [];
+    if(startStr && endStr){
+      let cur = new Date(startStr); let end = new Date(endStr);
+      cur.setHours(0,0,0,0); end.setHours(0,0,0,0);
+      while(cur <= end){ dateList.push(new Date(cur)); cur.setDate(cur.getDate()+1); }
+    } else {
+      let uniq = [...new Set(filtered.map(p=> (p.date||p.productionDate||p.createdAt||'').slice(0,10)).filter(Boolean))].sort();
+      dateList = uniq.map(d=> new Date(d));
+    }
+
+    const fmt = d => {
+      // format 14-Aug-26 seperti screenshot
+      return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'2-digit'}).replace(/ /g,'-');
+    };
+    const iso = d => d.toISOString().slice(0,10);
+
+    // 5. Map type -> date -> qty
+    const map = {};
+    allTypes.forEach(t=> map[t]={});
+    filtered.forEach(p=>{
+      const t = (p.uniformType||p.item||'').trim();
+      if(!t || !allTypes.includes(t)) return;
+      const dStr = (p.date||p.productionDate||p.createdAt||'').slice(0,10);
+      if(!dStr) return;
+      map[t][dStr] = (map[t][dStr]||0) + (Number(p.quantity)||0);
+    });
+
+    // 6. Buat data Excel persis seperti screenshot: baris pertama kosong + tanggal, baris selanjutnya jenis uniform
+    const wsData = [];
+    wsData.push(['', ...dateList.map(d=> fmt(d))]);
+    allTypes.forEach(t=>{
+      const row = [t];
+      dateList.forEach(d=>{
+        const v = map[t]?.[iso(d)];
+        row.push(v ? v : '');
+      });
+      wsData.push(row);
+    });
+
+    // 7. Download
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols'] = [{wch:18}, ...dateList.map(()=>({wch:12}))];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Production Matrix");
+    const fileName = `Production_Matrix_${startStr||'all'}_to_${endStr||'all'}${deptMatrix?'_'+deptMatrix:''}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    if(typeof showToast==='function') showToast('Excel Matrix didownload: '+fileName);
+    else alert('Downloaded: '+fileName);
+  }catch(e){
+    console.error(e);
+    alert('Error download: '+e.message);
+  }
+}
+</script>
+
+
+<script>
+// FINAL - MATRIX DOWNLOAD - TIDAK UBAH CODE LAIN
+function getProdForMatrix(){
+  let d=[];
+  try{
+    if(typeof getFilteredData==='function'){
+      const f=getFilteredData();
+      if(f && f.production) d=f.production;
+    }
+    if(!d.length && typeof state!=='undefined' && state.uniformProduction) d=state.uniformProduction;
+  }catch(e){ console.log(e); }
+  return d||[];
+}
+function populateMatrixDept(){
+  try{
+    const all = (typeof state!=='undefined' && state.uniformProduction) ? state.uniformProduction : [];
+    const depts=[...new Set(all.map(p=>(p.department||p.dept||'').toString().trim()).filter(Boolean))].sort();
+    const sel=document.getElementById('filter-matrix-department');
+    if(!sel) return;
+    const cur=sel.value;
+    sel.innerHTML='<option value="">Semua Department</option>'+depts.map(x=>'<option value="'+x+'">'+x+'</option>').join('');
+    if(cur) sel.value=cur;
+    const info=document.getElementById('matrix-info');
+    if(info) info.textContent='Data total: '+all.length+' | Filtered: '+getProdForMatrix().length+' | Dept: '+depts.length+'. Mengikuti filter tanggal dashboard.';
+  }catch(e){ console.error(e); }
+}
+function downloadProductionMatrixExcel(){
+  console.log('downloadProductionMatrixExcel called');
+  const prodAll=getProdForMatrix();
+  const deptEl=document.getElementById('filter-matrix-department');
+  const deptF=deptEl?deptEl.value.trim():'';
+  let filtered=prodAll;
+  if(deptF){
+    filtered=prodAll.filter(p=>(p.department||p.dept||'').toString().trim()===deptF);
+  }
+  if(!filtered.length){ alert('Tidak ada data.\nTotal data: '+prodAll.length+'\nDept filter: '+(deptF||'semua')+'\nCoba Reset filter tanggal di atas.'); return; }
+
+  const order=["Trousers","Shirt","Skirt","Blouse","Jacket","Dress","Vest","Polo Shirt","Cook Jacket","Napkin","Kitchen Cloth","Apron","Table Cloth"];
+  const types=[...new Set(filtered.map(p=>(p.uniformType||p.item||'').toString().trim()).filter(Boolean))];
+  const allTypes=[...order.filter(t=>types.includes(t)), ...types.filter(t=>!order.includes(t))];
+
+  // date list dari filtered data (sudah ikut filter tanggal dashboard)
+  let uniq=[...new Set(filtered.map(p=>(p.date||p.productionDate||p.createdAt||'').toString().slice(0,10)).filter(Boolean))].sort();
+  let dateList=uniq.map(d=>new Date(d));
+  // jika tidak ada tanggal karena format beda, coba pakai getFilteredData date parsing
+  if(!dateList.length){
+    alert('Tanggal tidak terbaca. Format date di data: '+ (filtered[0] ? JSON.stringify(filtered[0]).slice(0,200) : 'kosong'));
+    return;
+  }
+
+  const fmt=d=>{ try{return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'2-digit'}).replace(/ /g,'-');}catch(e){return d.toISOString().slice(0,10);} };
+  const iso=d=>d.toISOString().slice(0,10);
+  const map={}; allTypes.forEach(t=>map[t]={});
+  filtered.forEach(p=>{
+    const t=(p.uniformType||p.item||'').toString().trim();
+    const ds=(p.date||p.productionDate||p.createdAt||'').toString().slice(0,10);
+    if(!t) return;
+    if(!map[t]) map[t]={};
+    map[t][ds]=(map[t][ds]||0)+(Number(p.quantity)||0);
+  });
+
+  const wsData=[]; wsData.push(['', ...dateList.map(d=>fmt(d))]);
+  allTypes.forEach(t=>{
+    const row=[t];
+    dateList.forEach(d=>{ row.push(map[t]?.[iso(d)]||''); });
+    wsData.push(row);
+  });
+
+  if(typeof XLSX==='undefined'){ alert('Library XLSX belum load, cek koneksi internet'); return; }
+  const ws=XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols']=[{wch:18}, ...dateList.map(()=>({wch:12}))];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Production Matrix');
+  const sEl=document.getElementById('filter-start-date');
+  const eEl=document.getElementById('filter-end-date');
+  const fileName='Production_Matrix_'+(sEl&&sEl.value?sEl.value:'all')+'_to_'+(eEl&&eEl.value?eEl.value:'all')+(deptF?'_'+deptF:'')+'.xlsx';
+  XLSX.writeFile(wb, fileName);
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  setTimeout(populateMatrixDept, 1500);
+  setTimeout(populateMatrixDept, 4000);
+});
+// populate setelah renderAllViews
+(function(){
+  const orig = window.renderAllViews;
+  if(typeof orig==='function'){
+    window.renderAllViews = function(){
+      orig.apply(this, arguments);
+      setTimeout(populateMatrixDept, 500);
+    };
+  }
+})();
 </script>
 
 </body>
