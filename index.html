@@ -203,6 +203,13 @@
 }
 
 </style>
+
+<style>
+/* FIX: paksa klik aktif karena wrapper setting pointer-events:none */
+body, #matrix-filter-section, #matrix-filter-section *, #filter-matrix-department, #btnExcelMatrix { pointer-events: auto !important; }
+#matrix-filter-section { position: relative; z-index: 50; }
+</style>
+
 </head>
 <body class="text-gray-800">
 
@@ -1974,6 +1981,7 @@ function populateMatrixDeptFilter(){
 })();
 
 
+
 function downloadProductionMatrixExcel(){
   try{
     let prodByDate = [];
@@ -1985,24 +1993,15 @@ function downloadProductionMatrixExcel(){
     }catch(e){}
     if(!prodByDate.length && typeof state!=='undefined' && state.uniformProduction) prodByDate=state.uniformProduction;
     if(!prodByDate.length){ alert('Data kosong. Refresh data dulu.'); return; }
+
     const deptEl=document.getElementById('filter-matrix-department');
     const deptMatrix=deptEl?deptEl.value.trim():'';
-    let filtered = prodByDate;
-    if(deptMatrix){
-      filtered = prodByDate.filter(p=>{
-        const d=(p.department||p.dept||'').toString().trim().toLowerCase();
-        return d===deptMatrix.toLowerCase();
-      });
-    }
-    if(!filtered.length){
-      const sEl=document.getElementById('filter-start-date');
-      const eEl=document.getElementById('filter-end-date');
-      alert('Tidak ada data untuk filter '+(sEl&&sEl.value?sEl.value:'awal')+' s/d '+(eEl&&eEl.value?eEl.value:'akhir')+(deptMatrix?' dept '+deptMatrix:''));
-      return;
-    }
+
+    // Jika filter dept = Semua, kita akan buat blok per departemen seperti screenshot
+    // Jika filter dept spesifik, tetap 1 blok saja (behavior lama)
+
     const order=["Trousers","Shirt","Skirt","Blouse","Jacket","Dress","Vest","Polo Shirt","Cook Jacket","Napkin","Kitchen Cloth","Apron","Table Cloth"];
-    const typesInData=[...new Set(filtered.map(p=>(p.uniformType||p.item||'').trim()).filter(Boolean))];
-    const allTypes=[...order.filter(t=>typesInData.includes(t)), ...typesInData.filter(t=>!order.includes(t))];
+    
     function parseDate(s){
       if(!s) return null;
       s=s.toString().trim().slice(0,10);
@@ -2015,8 +2014,10 @@ function downloadProductionMatrixExcel(){
     }
     function toISO(d){ if(!d||isNaN(d)) return null; return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
     function fmt(d){ if(!d||isNaN(d)) return ''; try{ return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'2-digit'}).replace(/ /g,'-'); }catch(e){ return toISO(d)||''; } }
+
+    // Date list dari prodByDate (sudah mengikuti filter tanggal dashboard)
     var dateMap={};
-    filtered.forEach(function(p){
+    prodByDate.forEach(function(p){
       var raw=(p.date||p.productionDate||p.createdAt||'').toString();
       var d=parseDate(raw);
       if(!d) return;
@@ -2025,6 +2026,8 @@ function downloadProductionMatrixExcel(){
     });
     var dateEntries=Object.entries(dateMap).sort(function(a,b){ return a[0].localeCompare(b[0]); });
     var dateList=dateEntries.map(function(e){ return e[1]; });
+
+    // Jika ada filter tanggal dashboard, pakai range itu untuk kolom
     var sEl=document.getElementById('filter-start-date');
     var eEl=document.getElementById('filter-end-date');
     var startStr=sEl&&sEl.value?sEl.value:'';
@@ -2040,28 +2043,74 @@ function downloadProductionMatrixExcel(){
       }
     }
     if(!dateList.length){ alert('Tanggal tidak terbaca'); return; }
-    var map={}; allTypes.forEach(function(t){ map[t]={}; });
-    filtered.forEach(function(p){
-      var t=(p.uniformType||p.item||'').trim();
-      var raw=(p.date||p.productionDate||p.createdAt||'').toString();
-      var d=parseDate(raw);
-      if(!t||!d) return;
-      var iso=toISO(d);
-      if(!map[t]) map[t]={};
-      map[t][iso]=(map[t][iso]||0)+(Number(p.quantity)||0);
-    });
-    var wsData=[]; wsData.push(['', ...dateList.map(function(d){ return fmt(d); })]);
-    allTypes.forEach(function(t){
-      var row=[t];
-      dateList.forEach(function(d){ row.push(map[t]?.[toISO(d)]||''); });
-      wsData.push(row);
-    });
+
+    var wsData=[];
+    // Header tanggal sekali di paling atas
+    wsData.push(['', ...dateList.map(function(d){ return fmt(d); })]);
+
+    if(!deptMatrix){
+      // MODE SEMUA DEPARTMENT - pisahkan per departemen seperti screenshot Cinamon, Li Feng, IRD
+      var allDepts=[...new Set(prodByDate.map(function(p){ return (p.department||p.dept||'').toString().trim(); }).filter(Boolean))].sort(function(a,b){ return a.toLowerCase().localeCompare(b.toLowerCase()); });
+      if(!allDepts.length){ allDepts=['Unknown']; }
+
+      allDepts.forEach(function(deptName){
+        var filteredDept = prodByDate.filter(function(p){ return (p.department||p.dept||'').toString().trim().toLowerCase()===deptName.toLowerCase(); });
+        if(!filteredDept.length) return;
+
+        var typesInData=[...new Set(filteredDept.map(function(p){ return (p.uniformType||p.item||'').trim(); }).filter(Boolean))];
+        var allTypes=[...order.filter(function(t){ return typesInData.includes(t); }), ...typesInData.filter(function(t){ return !order.includes(t); })];
+        if(!allTypes.length) allTypes=order.slice(0,8); // fallback seperti screenshot
+
+        // Map untuk dept ini
+        var map={}; allTypes.forEach(function(t){ map[t]={}; });
+        filteredDept.forEach(function(p){
+          var t=(p.uniformType||p.item||'').trim();
+          var raw=(p.date||p.productionDate||p.createdAt||'').toString();
+          var d=parseDate(raw);
+          if(!t||!d) return;
+          var iso=toISO(d);
+          if(!map[t]) map[t]={};
+          map[t][iso]=(map[t][iso]||0)+(Number(p.quantity)||0);
+        });
+
+        // Blok departemen
+        wsData.push([deptName]); // baris nama departemen bold nanti di Excel manual, tapi kita tulis sebagai header
+        allTypes.forEach(function(t){
+          var row=[t];
+          dateList.forEach(function(d){ row.push(map[t]?.[toISO(d)]||''); });
+          wsData.push(row);
+        });
+        wsData.push([]); // baris kosong pemisah antar departemen
+      });
+    } else {
+      // MODE SATU DEPARTMENT - seperti sebelumnya
+      var filtered = prodByDate.filter(function(p){ return (p.department||p.dept||'').toString().trim().toLowerCase()===deptMatrix.toLowerCase(); });
+      if(!filtered.length){ alert('Tidak ada data dept '+deptMatrix); return; }
+      var typesInData=[...new Set(filtered.map(function(p){ return (p.uniformType||p.item||'').trim()).filter(Boolean))];
+      var allTypes=[...order.filter(function(t){ return typesInData.includes(t); }), ...typesInData.filter(function(t){ return !order.includes(t); })];
+      var map={}; allTypes.forEach(function(t){ map[t]={}; });
+      filtered.forEach(function(p){
+        var t=(p.uniformType||p.item||'').trim();
+        var raw=(p.date||p.productionDate||p.createdAt||'').toString();
+        var d=parseDate(raw);
+        if(!t||!d) return;
+        var iso=toISO(d);
+        if(!map[t]) map[t]={};
+        map[t][iso]=(map[t][iso]||0)+(Number(p.quantity)||0);
+      });
+      allTypes.forEach(function(t){
+        var row=[t];
+        dateList.forEach(function(d){ row.push(map[t]?.[toISO(d)]||''); });
+        wsData.push(row);
+      });
+    }
+
     if(typeof XLSX==='undefined'){ alert('Library XLSX belum load'); return; }
     var ws=XLSX.utils.aoa_to_sheet(wsData);
     ws['!cols']=[{wch:18}, ...dateList.map(function(){ return {wch:12}; })];
     var wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Production Matrix');
-    var fileName='Production_Matrix_'+(startStr||'all')+'_to_'+(endStr||'all')+(deptMatrix?'_'+deptMatrix:'')+'.xlsx';
+    var fileName='Production_Matrix_'+(startStr||'all')+'_to_'+(endStr||'all')+(deptMatrix?'_'+deptMatrix:'_AllDepts')+'.xlsx';
     XLSX.writeFile(wb, fileName);
     if(typeof showToast==='function') showToast('Download: '+fileName);
   }catch(e){
@@ -2070,6 +2119,48 @@ function downloadProductionMatrixExcel(){
   }
 }
 
+</script>
+
+
+<script>
+// FIX pointer-events none + pastikan filter dept terisi
+(function(){
+  function forceEnable(){
+    try{
+      if(document.body){
+        document.body.style.setProperty('pointer-events','auto','important');
+      }
+      var sec=document.getElementById('matrix-filter-section');
+      if(sec) sec.style.setProperty('pointer-events','auto','important');
+      var sel=document.getElementById('filter-matrix-department');
+      if(sel) sel.style.setProperty('pointer-events','auto','important');
+      var btn=document.querySelector('[onclick="downloadProductionMatrixExcel()"]');
+      if(btn) btn.style.setProperty('pointer-events','auto','important');
+    }catch(e){}
+  }
+  function ensureDeptFilter(){
+    try{
+      if(typeof populateMatrixDeptFilter==='function') populateMatrixDeptFilter();
+      else if(typeof populateMatrixDept==='function') populateMatrixDept();
+    }catch(e){}
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    forceEnable();
+    setTimeout(forceEnable, 500);
+    setTimeout(forceEnable, 1500);
+    setTimeout(ensureDeptFilter, 1200);
+    setTimeout(ensureDeptFilter, 3000);
+  });
+  setInterval(forceEnable, 2000);
+  // hook renderAllViews untuk isi dept setelah data load
+  var origRender = window.renderAllViews;
+  if(typeof origRender==='function'){
+    window.renderAllViews = function(){
+      origRender.apply(this, arguments);
+      setTimeout(function(){ forceEnable(); ensureDeptFilter(); }, 600);
+    };
+  }
+})();
 </script>
 
 </body>
