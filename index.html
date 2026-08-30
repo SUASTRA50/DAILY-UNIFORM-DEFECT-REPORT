@@ -1453,6 +1453,19 @@ html, body { pointer-events: auto !important; }
           <button type="submit" id="btn-save-inventory" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg"><i class="fa-solid fa-floppy-disk mr-2"></i> Save Inventory</button>
         </div>
       </form>
+
+      <div class="mt-8">
+        <h4 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-list"></i> Recent Inventory (50) - Newest First</h4>
+        <div class="ud-table-wrap overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-left">
+            <thead class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+              <tr><th class="py-2.5 px-3">ID</th><th class="py-2.5 px-3">Date</th><th class="py-2.5 px-3">Input By</th><th class="py-2.5 px-3">Owner</th><th class="py-2.5 px-3">Item</th><th class="py-2.5 px-3">Dept</th></tr>
+            </thead>
+            <tbody id="uniform-inventory-table-body" class="text-xs"></tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
 
 
@@ -1583,6 +1596,18 @@ html, body { pointer-events: auto !important; }
           <button type="submit" id="btn-save-discard" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold rounded-lg"><i class="fa-solid fa-floppy-disk mr-2"></i> Save Discard</button>
         </div>
       </form>
+      <div class="mt-8">
+        <h4 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-list"></i> Recent Discard (50) - Newest First</h4>
+        <div class="ud-table-wrap overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-left">
+            <thead class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+              <tr><th class="py-2.5 px-3">ID</th><th class="py-2.5 px-3">Date</th><th class="py-2.5 px-3">Input By</th><th class="py-2.5 px-3">Owner</th><th class="py-2.5 px-3">Item</th><th class="py-2.5 px-3">Dept</th><th class="py-2.5 px-3">Reason</th></tr>
+            </thead>
+            <tbody id="uniform-discard-table-body" class="text-xs"></tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
 
 
@@ -1912,7 +1937,7 @@ function renderUniformReceivedTable(){
   const tbody = document.getElementById('uniform-received-table-body');
   if(!tbody) return;
   tbody.innerHTML = '';
-  const list = state.uniformReceived || [];
+  const list = [...(state.uniformReceived || [])].reverse();
   if(list.length===0){
     tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-xs text-slate-400">Belum ada data Received</td></tr>`;
     return;
@@ -1937,7 +1962,7 @@ function renderUniformProductionTable(){
   const tbody = document.getElementById('uniform-production-table-body');
   if(!tbody) return;
   tbody.innerHTML = '';
-  const list = state.uniformProduction || [];
+  const list = [...(state.uniformProduction || [])].reverse();
   if(list.length===0){
     tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-xs text-slate-400">Belum ada data Production</td></tr>`;
     return;
@@ -1958,7 +1983,25 @@ function renderUniformProductionTable(){
 
 function showToast(msg){ const t=document.getElementById("toast"); if(!t) return; t.textContent=msg; t.classList.remove("hidden"); t.classList.add("flex"); clearTimeout(window._toastTimer); window._toastTimer=setTimeout(()=>{t.classList.add("hidden");}, 2500); }
 
-function renderUniformInventoryTable(){ const tbody=document.getElementById("uniform-inventory-table-body"); if(!tbody) return; tbody.innerHTML=""; const list=state.uniformInventory||[]; if(!list.length){ tbody.innerHTML=`<tr><td colspan="6" class="py-6 text-center text-xs text-slate-400">Belum ada data Inventory</td></tr>`; return;} list.slice(0,50).forEach(function(r){ var tr=document.createElement("tr"); tr.className="border-b border-slate-100"; var d=r.createdAt||r.date||"-"; var it=r.item||r.uniformType||"-"; tr.innerHTML=`<td class="py-2.5 px-3 font-mono text-xs">${r.uniqueID||"-"}</td><td class="py-2.5 px-3 text-xs">${d}</td><td class="py-2.5 px-3 text-xs">${r.inputBy||"-"}</td><td class="py-2.5 px-3 text-xs">${r.uniformOwner||"-"}</td><td class="py-2.5 px-3 text-xs">${it} G:${r.good||0} F:${r.fair||0} B:${r.bad||0} (${r.quantity||0})</td><td class="py-2.5 px-3 text-xs">${r.department||"-"}</td>`; tbody.appendChild(tr); }); }
+function renderUniformInventoryTable(){ const tbody=document.getElementById("uniform-inventory-table-body"); if(!tbody) return; tbody.innerHTML=""; const list=[...(state.uniformInventory||[])].reverse(); if(!list.length){ tbody.innerHTML=`<tr><td colspan="6" class="py-6 text-center text-xs text-slate-400">Belum ada data Inventory</td></tr>`; return;} list.slice(0,50).forEach(function(r){ var tr=document.createElement("tr"); tr.className="border-b border-slate-100"; var d=r.createdAt||r.date||"-"; var it=r.item||r.uniformType||"-"; tr.innerHTML=`<td class="py-2.5 px-3 font-mono text-xs">${r.uniqueID||"-"}</td><td class="py-2.5 px-3 text-xs">${d}</td><td class="py-2.5 px-3 text-xs">${r.inputBy||"-"}</td><td class="py-2.5 px-3 text-xs">${r.uniformOwner||"-"}</td><td class="py-2.5 px-3 text-xs">${it} G:${r.good||0} F:${r.fair||0} B:${r.bad||0} (${r.quantity||0})</td><td class="py-2.5 px-3 text-xs">${r.department||"-"}</td>`; tbody.appendChild(tr); }); }
+
+
+function renderUniformDiscardTable(){ 
+  const tbody=document.getElementById("uniform-discard-table-body"); 
+  if(!tbody) return; 
+  tbody.innerHTML=""; 
+  const list=[...(state.uniformDiscard||[])].reverse(); 
+  if(!list.length){ tbody.innerHTML=`<tr><td colspan="7" class="py-6 text-center text-xs text-slate-400">Belum ada data Discard</td></tr>`; return;} 
+  list.slice(0,50).forEach(function(r){ 
+    var tr=document.createElement("tr"); 
+    tr.className="border-b border-slate-100 hover:bg-slate-50"; 
+    var d=r.createdAt||r.date||"-"; 
+    var it=r.item||r.uniformType||r.uniform||"-"; 
+    tr.innerHTML=`<td class="py-2.5 px-3 font-mono text-xs font-bold text-rose-600">${r.uniqueID||"-"}</td><td class="py-2.5 px-3 text-xs text-slate-500">${d}</td><td class="py-2.5 px-3 text-xs">${r.inputBy||"-"}</td><td class="py-2.5 px-3 text-xs font-medium">${r.uniformOwner||r.owner||"-"}</td><td class="py-2.5 px-3 text-xs">${it} x ${r.quantity||0}</td><td class="py-2.5 px-3 text-xs">${r.department||"-"}</td><td class="py-2.5 px-3 text-xs">${r.reason||r.remarks||"-"}</td>`; 
+    tbody.appendChild(tr); 
+  }); 
+}
+
 
 function switchUniformTab(tabName){
   try{
@@ -1979,6 +2022,8 @@ function renderAllViews() {
   renderTailorQueue();
   renderUniformReceivedTable();
   renderUniformProductionTable();
+  renderUniformInventoryTable();
+  renderUniformDiscardTable();
 }
 
 /* FUNGSI DASHBOARD UTAMA DENGAN TAMBAHAN DATA RECEIVED DAN PRODUCTION + FILTER TANGGAL + IN_PROGRESS */
@@ -2019,13 +2064,14 @@ function renderDashboard() {
   const elDisc=document.getElementById('stat-discard-items'); if(elDisc) elDisc.innerText=totalDiscardItems;
   const inventoryList=filtered.inventory||[]; const discardList=filtered.discard||[];
 
-  // Render Tabel 1: Defect Activity Log
+  // Render Tabel 1: Defect Activity Log - newest first
   const tbodyDefect = document.getElementById('dashboard-recent-table');
   tbodyDefect.innerHTML = '';
-  if(tasks.length === 0) {
+  const sortedTasks = [...(tasks||[])].reverse();
+  if(sortedTasks.length === 0) {
     tbodyDefect.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-xs text-gray-400">Tidak ada data Defect.</td></tr>`;
   } else {
-    tasks.slice(0, 10).forEach(t => {
+    sortedTasks.slice(0, 10).forEach(t => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td class="py-3 px-4 font-mono font-bold text-indigo-600">${t.uniqueID || '-'}</td>
@@ -2051,7 +2097,7 @@ function renderDashboard() {
   if(receivedList.length === 0) {
     tbodyReceived.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-xs text-gray-400">Tidak ada data Uniform Received.</td></tr>`;
   } else {
-    receivedList.slice(0, 10).forEach(r => {
+    [...(receivedList||[])].reverse().slice(0, 10).forEach(r => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td class="py-3 px-4 font-mono font-bold text-blue-600">${r.uniqueID || '-'}</td>
@@ -2075,7 +2121,7 @@ function renderDashboard() {
   if(productionList.length === 0) {
     tbodyProduction.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-xs text-gray-400">Tidak ada data Uniform Production.</td></tr>`;
   } else {
-    productionList.slice(0, 10).forEach(p => {
+    [...(productionList||[])].reverse().slice(0, 10).forEach(p => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td class="py-3 px-4 font-mono font-bold text-teal-600">${p.uniqueID || '-'}</td>
@@ -2119,8 +2165,10 @@ function renderDashboard() {
 
 function renderUniformTable() {
   const tbody = document.getElementById('uniform-submissions-table');
+  if(!tbody) return;
   tbody.innerHTML = '';
-  state.tasks.forEach(t => {
+  const sorted = [...(state.tasks||[])].reverse();
+  sorted.forEach(t => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="py-2.5 px-3 font-mono font-bold text-indigo-600 text-xs">${t.uniqueID || '-'}</td>
@@ -2189,9 +2237,10 @@ function renderTailorQueue() {
   const grid = document.getElementById('tailor-task-grid');
   grid.innerHTML = '';
 
+  const base = [...(state.tasks||[])].reverse();
   const filtered = state.currentTailorFilter === 'ALL'
-    ? state.tasks
-    : state.tasks.filter(t => t.status === state.currentTailorFilter);
+    ? base
+    : base.filter(t => t.status === state.currentTailorFilter);
 
   if (filtered.length === 0) {
     grid.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 text-sm bg-white rounded-xl border">No tasks in this status.</div>`;
