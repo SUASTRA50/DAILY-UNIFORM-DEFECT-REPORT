@@ -21,6 +21,15 @@
 <!-- Apple SF Pro System Font - no external font needed -->
 
 <style>
+  .uniform-binder{display:flex;gap:6px;overflow-x:auto;padding:8px 6px 0;white-space:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;align-items:flex-end;border-bottom:1px solid #d2d2d7;}
+  .uniform-binder::-webkit-scrollbar{display:none}
+  .uniform-binder-tab{flex:0 0 auto;min-width:76px;min-height:38px;padding:8px 12px;border:1px solid #d2d2d7;border-bottom:none;border-radius:10px 10px 0 0;background:#f5f5f7;color:#1d1d1f;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s ease;position:relative;z-index:1;}
+  .uniform-binder-tab:hover{background:#e8e8ed}
+  .uniform-binder-tab.active{background:#1d1d1f;color:#fff;border-color:#1d1d1f;z-index:2;}
+  .uniform-binder-panel{display:none;background:#fff;border:1px solid rgba(0,0,0,0.06);border-top:none;border-radius:0 12px 12px 12px;box-shadow:0 4px 24px rgba(0,0,0,0.04);margin-top:0;padding:16px;position:relative;}
+  .uniform-binder-panel.active{display:block}
+  @media (max-width:640px){.uniform-binder-tab{min-width:64px;padding:6px 8px;font-size:10px;min-height:34px;}}
+
   :root { 
     --ud-navy:#1d1d1f; 
     --ud-blue:#0071e3; 
@@ -108,17 +117,8 @@
   }
 
   /* Uniform binder Apple style */
-  .uniform-binder{display:flex;gap:8px;overflow-x:auto;padding:8px 4px 0;scrollbar-width:none}
-  .uniform-binder::-webkit-scrollbar{display:none}
-  .uniform-binder-tab{
-    flex:1 0 auto;min-width:112px;min-height:40px;padding:9px 18px;
-    border:1px solid transparent;border-radius:980px;
-    background:#e8e8ed;color:#1d1d1f;font-size:12px;font-weight:500;letter-spacing:-0.01em;line-height:1.1;
-    transition: all .2s ease;
-  }
-  .uniform-binder-tab.active{background:#1d1d1f;color:#fff;box-shadow:none;}
-  .uniform-binder-panel{display:none;background:#fff;border:1px solid rgba(0,0,0,0.06);border-radius:18px;box-shadow:0 4px 24px rgba(0,0,0,0.04); margin-top:12px; padding:24px;}
-  .uniform-binder-panel.active{display:block}
+  
+  
   .uniform-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
   .uniform-field label{display:block;margin-bottom:8px;font-size:12px;font-weight:500;color:#1d1d1f; letter-spacing:-0.01em;}
   .uniform-field input,.uniform-field select{
@@ -219,6 +219,13 @@
   @media(max-width:767px){.chart-wrap{height:280px !important;min-height:280px !important}.chart-wrap.tall{height:320px !important;min-height:320px !important}}
 
 </style>
+<script>
+  document.querySelectorAll('.uniform-binder-panel').forEach(function(p){
+    p.classList.toggle('active', p.id==='uniform-panel-'+tabName);
+  });
+  var activeBtn=document.querySelector('.uniform-binder-tab[data-ut="'+tabName+'"]');
+  if(activeBtn) activeBtn.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+}</script>
 
 <style id="fix-pointer-final">
 html, body { pointer-events: auto !important; }
@@ -269,7 +276,34 @@ html, body { pointer-events: auto !important; }
   }
 
 </style>
+<script>
+  document.querySelectorAll('.uniform-binder-panel').forEach(function(p){
+    p.classList.toggle('active', p.id==='uniform-panel-'+tabName);
+  });
+  var activeBtn=document.querySelector('.uniform-binder-tab[data-ut="'+tabName+'"]');
+  if(activeBtn) activeBtn.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+}</script>
 
+
+<script>
+(function(){
+  function fixPE(){
+    try{
+      if(document.body && document.body.style.pointerEvents==='none'){
+        document.body.style.pointerEvents='auto';
+      }
+      document.querySelectorAll('[data-radix-focus-guard]').forEach(function(el){ el.style.pointerEvents='none'; });
+    }catch(e){}
+  }
+  fixPE();
+  setInterval(fixPE, 800);
+  if(document.body){
+    var obs=new MutationObserver(fixPE);
+    obs.observe(document.body,{attributes:true, attributeFilter:['style']});
+  }
+})();
+</script>
+<style>body{pointer-events:auto !important;} .uniform-binder,.uniform-binder-tab{pointer-events:auto !important;}</style>
 </head>
 <body class="text-gray-800">
 
@@ -563,9 +597,7 @@ html, body { pointer-events: auto !important; }
             <p class="text-[10px] text-gray-500 mt-1" id="matrix-info">Klik Refresh Data jika daftar department masih kosong</p>
           </div>
           <div>
-            <button type="button" id="btnMatrixDownload" onclick="downloadProductionMatrixExcel()" class="inline-flex items-center px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg">
-              <i class="fa-solid fa-file-excel mr-2"></i> Download Excel Matrix
-            </button>
+            <div class="flex gap-2"><button type="button" id="btnMatrixDownload" onclick="downloadProductionMatrixExcel()" class="inline-flex items-center px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg"><i class="fa-solid fa-file-excel mr-2"></i> Excel Production</button><button type="button" id="btnInventoryMatrixDownload" onclick="downloadInventoryMatrixExcel()" class="inline-flex items-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg"><i class="fa-solid fa-file-excel mr-2"></i> Excel Inventory</button></div>
           </div>
         </div>
       </div>
@@ -611,9 +643,9 @@ html, body { pointer-events: auto !important; }
       <p class="text-xs text-slate-500 mt-1">Defect, received delivery, and production tracking</p>
     </div>
     <div class="uniform-binder" role="tablist">
-      <button type="button" class="uniform-binder-tab active" data-ut="defect" onclick="switchUniformTab('defect')"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Report Defects</button>
-      <button type="button" class="uniform-binder-tab" data-ut="received" onclick="switchUniformTab('received')"><i class="fa-solid fa-box-open mr-1"></i> Uniform Received</button>
-      <button type="button" class="uniform-binder-tab" data-ut="production" onclick="switchUniformTab('production')"><i class="fa-solid fa-shirt mr-1"></i> Uniform Production</button>
+      <button type="button" class="uniform-binder-tab active" data-ut="defect" onclick="switchUniformTab('defect')"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Defect</button>
+      <button type="button" class="uniform-binder-tab" data-ut="received" onclick="switchUniformTab('received')"><i class="fa-solid fa-box-open mr-1"></i> Received</button>
+      <button type="button" class="uniform-binder-tab" data-ut="production" onclick="switchUniformTab('production')"><i class="fa-solid fa-industry mr-1"></i> Productivity</button>
       <button type="button" class="uniform-binder-tab" data-ut="inventory" onclick="switchUniformTab('inventory')"><i class="fa-solid fa-warehouse mr-1"></i> Inventory</button>
       <button type="button" class="uniform-binder-tab" data-ut="discard" onclick="switchUniformTab('discard')"><i class="fa-solid fa-trash-can mr-1"></i> Discard</button>
     </div>
@@ -1752,8 +1784,7 @@ function getFilteredData(){
   if(!start && !end) return { tasks: state.tasks||[], received: state.uniformReceived||[], production: state.uniformProduction||[], inventory: state.uniformInventory||[], discard: state.uniformDiscard||[] };
   
   function getDateStr(obj){
-    // Try multiple possible date fields from Sheets
-    return obj.createdAt || obj.date || obj.timestamp || obj.Timestamp || obj.TIMESTAMP || obj.receivedAt || obj.receivedDate || obj.productionDate || obj.prodDate || obj.Date || obj['Created At'] || obj['Tanggal'] || '';
+    return obj.createdAt || obj.date || obj.Date || obj.CompletedAt || obj.completedAt || obj.completedAt || obj.startAt || obj.StartAt || obj.timestamp || obj.Timestamp || obj.TIMESTAMP || obj.receivedAt || obj.receivedDate || obj.productionDate || obj.prodDate || obj['Created At'] || obj['Tanggal'] || '';
   }
   
   const tasks = (state.tasks||[]).filter(t => isWithinDateRange(getDateStr(t), start, end));
@@ -1927,6 +1958,21 @@ function renderUniformProductionTable(){
 
 function showToast(msg){ const t=document.getElementById("toast"); if(!t) return; t.textContent=msg; t.classList.remove("hidden"); t.classList.add("flex"); clearTimeout(window._toastTimer); window._toastTimer=setTimeout(()=>{t.classList.add("hidden");}, 2500); }
 
+function renderUniformInventoryTable(){ const tbody=document.getElementById("uniform-inventory-table-body"); if(!tbody) return; tbody.innerHTML=""; const list=state.uniformInventory||[]; if(!list.length){ tbody.innerHTML=`<tr><td colspan="6" class="py-6 text-center text-xs text-slate-400">Belum ada data Inventory</td></tr>`; return;} list.slice(0,50).forEach(function(r){ var tr=document.createElement("tr"); tr.className="border-b border-slate-100"; var d=r.createdAt||r.date||"-"; var it=r.item||r.uniformType||"-"; tr.innerHTML=`<td class="py-2.5 px-3 font-mono text-xs">${r.uniqueID||"-"}</td><td class="py-2.5 px-3 text-xs">${d}</td><td class="py-2.5 px-3 text-xs">${r.inputBy||"-"}</td><td class="py-2.5 px-3 text-xs">${r.uniformOwner||"-"}</td><td class="py-2.5 px-3 text-xs">${it} G:${r.good||0} F:${r.fair||0} B:${r.bad||0} (${r.quantity||0})</td><td class="py-2.5 px-3 text-xs">${r.department||"-"}</td>`; tbody.appendChild(tr); }); }
+
+function switchUniformTab(tabName){
+  try{
+    document.querySelectorAll('.uniform-binder-tab').forEach(function(b){
+      b.classList.toggle('active', b.dataset.ut===tabName);
+    });
+    document.querySelectorAll('.uniform-binder-panel').forEach(function(p){
+      p.classList.toggle('active', p.id==='uniform-panel-'+tabName);
+    });
+    var activeBtn=document.querySelector('.uniform-binder-tab[data-ut="'+tabName+'"]');
+    if(activeBtn) activeBtn.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+  }catch(e){ console.error(e); }
+}
+
 function renderAllViews() {
   renderDashboard();
   renderUniformTable();
@@ -1983,7 +2029,7 @@ function renderDashboard() {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td class="py-3 px-4 font-mono font-bold text-indigo-600">${t.uniqueID || '-'}</td>
-        <td class="py-3 px-4 text-xs text-gray-500">${t.createdAt || '-'}</td>
+        <td class="py-3 px-4 text-xs text-gray-500">${t.date || t.createdAt || t.CompletedAt || '-'}</td>
         <td class="py-3 px-4 font-medium text-gray-700">${t.reportingStaff || t.inputBy || '-'}</td>
         <td class="py-3 px-4 text-xs">
           <div class="font-bold text-gray-800">${t.staffName || t.staff || '-'}</div>
@@ -2015,7 +2061,7 @@ function renderDashboard() {
           <div class="font-bold text-gray-800">${r.uniformOwner || '-'}</div>
           <div class="text-gray-500">${r.department || '-'}</div>
         </td>
-        <td class="py-3 px-4 text-xs"><span class="font-semibold">${r.uniformType || '-'}</span> (${r.quantity || 0} Pcs)</td>
+        <td class="py-3 px-4 text-xs"><span class="font-semibold">${r.whatReceived || r.uniformType || '-'}</span> (${r.quantity || 0} Pcs)</td>
         <td class="py-3 px-4 text-xs font-mono">${r.poNumber || '-'}</td>
         <td class="py-3 px-4 text-xs text-gray-600">${r.supplierName || '-'}</td>
       `;
@@ -2339,10 +2385,7 @@ function filterUniformTable() {
   });
 }
 
-function switchUniformTab(tabName){
-  document.querySelectorAll('.uniform-binder-tab').forEach(b=>b.classList.toggle('active',b.dataset.ut===tabName));
-  document.querySelectorAll('.uniform-binder-panel').forEach(p=>p.classList.toggle('active',p.id==='uniform-panel-'+tabName));
-}
+
 
 function uniformFormData(id){
   const f = document.getElementById(id);
@@ -2533,18 +2576,18 @@ function renderAddedAnalytics(){
     const itLabel=document.getElementById('inputter-total-label'); if(itLabel) itLabel.textContent=inputVals.reduce((a,b)=>a+b,0)+' total';
     const defLabel=document.getElementById('defect-total-label'); if(defLabel) defLabel.textContent=Object.values(byDefect).reduce((a,b)=>a+b,0)+' total';
 
-    // Received
+    // Received - FIX: support whatReceived (new header)
     const recByType={}, recByDept={}, recStack={};
-    receivedList.forEach(r=>{ const dept=r.department||'Unknown'; const type=r.uniformType||r.item||'Unknown'; const q=Number(r.quantity)||0; if(q<=0) return; recByType[type]=(recByType[type]||0)+q; recByDept[dept]=(recByDept[dept]||0)+q; if(!recStack[dept]) recStack[dept]={}; recStack[dept][type]=(recStack[dept][type]||0)+q; });
+    receivedList.forEach(r=>{ const dept=r.department||'Unknown'; const type=r.whatReceived||r.uniformType||r.item||r.uniformType||'Unknown'; const q=Number(r.quantity)||0; if(q<=0) return; recByType[type]=(recByType[type]||0)+q; recByDept[dept]=(recByDept[dept]||0)+q; if(!recStack[dept]) recStack[dept]={}; recStack[dept][type]=(recStack[dept][type]||0)+q; });
     const recLabels=Object.keys(recByType).sort((a,b)=>recByType[b]-recByType[a]);
     const cRT=document.getElementById('chartReceivedByType'); if(cRT&&recLabels.length){ destroyAnalyticsChart('recType'); analyticsCharts['recType']=new Chart(cRT,{type:'bar', data:{labels:recLabels, datasets:[{data:recLabels.map(k=>recByType[k]), backgroundColor:'#2563eb'}]}, options:{responsive:true, maintainAspectRatio:false, indexAxis:'y', plugins:{legend:{display:false}}}}); }
     const cRD=document.getElementById('chartReceivedByDept'); if(cRD&&Object.keys(recByDept).length){ destroyAnalyticsChart('recDept'); analyticsCharts['recDept']=new Chart(cRD,{type:'pie', data:{labels:Object.keys(recByDept), datasets:[{data:Object.values(recByDept), backgroundColor:['#1e3a8a','#2563eb','#60a5fa','#93c5fd']}]}, options:{responsive:true, maintainAspectRatio:false}}); }
     const cRS=document.getElementById('chartReceivedStacked'); if(cRS){ const depts=Object.keys(recStack); const datasets=recLabels.map((it,i)=>({label:it, data:depts.map(d=>recStack[d][it]||0), backgroundColor:`hsl(${i*30} 70% 55%)`})); destroyAnalyticsChart('recStack'); if(depts.length) analyticsCharts['recStack']=new Chart(cRS,{type:'bar', data:{labels:depts, datasets}, options:{responsive:true, maintainAspectRatio:false, scales:{x:{stacked:true}, y:{stacked:true}}}}); }
     const recKpi=document.getElementById('received-kpi'); if(recKpi){ const total=Object.values(recByType).reduce((a,b)=>a+b,0); recKpi.innerHTML=Object.entries(recByDept).map(([d,v])=>`<div class="kpi-mini"><div class="text-[10px] font-bold text-blue-600">${d}</div><div class="font-bold">${v}</div></div>`).join('')+`<div class="bg-indigo-500 text-white rounded-xl p-3 shadow-sm border border-indigo-400"><div class="text-[10px] font-bold uppercase tracking-wide">TOTAL RECEIVED</div><div class="font-bold text-lg mt-1">${total}</div></div>`; }
 
-    // Production
+    // Production - FIX
     const prodByType={}, prodByDept={}, prodByMonth={};
-    productionList.forEach(p=>{ const dept=p.department||'General'; const type=p.uniformType||p.item||'Unknown'; const q=Number(p.quantity)||0; if(q<=0) return; prodByType[type]=(prodByType[type]||0)+q; prodByDept[dept]=(prodByDept[dept]||0)+q; const m=(p.createdAt||p.date||'').slice(0,7); if(m){ prodByMonth[m]=(prodByMonth[m]||0)+q; } });
+    productionList.forEach(p=>{ const dept=p.department||'General'; const type=p.uniformType||p.whatReceived||p.item||'Unknown'; const q=Number(p.quantity)||0; if(q<=0) return; prodByType[type]=(prodByType[type]||0)+q; prodByDept[dept]=(prodByDept[dept]||0)+q; const m=(p.createdAt||p.date||p.CompletedAt||p.completedAt||'').slice(0,7); if(m){ prodByMonth[m]=(prodByMonth[m]||0)+q; } });
     const prodLabels=Object.keys(prodByType).sort((a,b)=>prodByType[b]-prodByType[a]);
     const cPT=document.getElementById('chartProdByType'); if(cPT&&prodLabels.length){ destroyAnalyticsChart('prodType'); analyticsCharts['prodType']=new Chart(cPT,{type:'bar', data:{labels:prodLabels, datasets:[{data:prodLabels.map(k=>prodByType[k]), backgroundColor:'#059669'}]}, options:{responsive:true, maintainAspectRatio:false}}); }
     const cPTr=document.getElementById('chartProdTrend'); if(cPTr){ const months=Object.keys(prodByMonth).sort(); destroyAnalyticsChart('prodTrend'); if(months.length) analyticsCharts['prodTrend']=new Chart(cPTr,{type:'line', data:{labels:months, datasets:[{label:'Production', data:months.map(m=>prodByMonth[m]), borderColor:'#059669', backgroundColor:'rgba(5,150,105,.15)', fill:true, tension:.4}]}, options:{responsive:true, maintainAspectRatio:false}}); }
@@ -2552,9 +2595,9 @@ function renderAddedAnalytics(){
     const cPDo=document.getElementById('chartProdDonut'); if(cPDo&&prodLabels.length){ destroyAnalyticsChart('prodDonut'); analyticsCharts['prodDonut']=new Chart(cPDo,{type:'polarArea', data:{labels:prodLabels, datasets:[{data:prodLabels.map(k=>prodByType[k]), backgroundColor:prodLabels.map((_,i)=>`hsl(${140+i*20} 65% 55%)`)}]}, options:{responsive:true, maintainAspectRatio:false}}); }
     const prodKpi=document.getElementById('production-kpi'); if(prodKpi){ const total=Object.values(prodByType).reduce((a,b)=>a+b,0); prodKpi.innerHTML=prodLabels.slice(0,4).map(k=>`<div class="kpi-mini"><div class="text-[10px] font-bold text-emerald-700">${k}</div><div class="font-bold">${prodByType[k]}</div></div>`).join('')+`<div class="bg-emerald-900 text-white rounded-xl p-3"><div class="text-[10px]">TOTAL</div><div class="font-bold">${total}</div></div>`; }
 
-    // Tailor Performance
+    // Tailor Performance - FIX for new headers date/CompletedAt
     const byTailor={};
-    tasks.forEach(t=>{ const name=(t.tailor||'Unassigned').trim()||'Unassigned'; if(!byTailor[name]) byTailor[name]={open:0,inprog:0,completed:0,credit:0,months:{}}; if(t.status==='OPEN') byTailor[name].open++; else if(t.status==='IN_PROGRESS') byTailor[name].inprog++; else if(t.status==='COMPLETED') byTailor[name].completed++; const cred=t.totalCredit!=null?Number(t.totalCredit):(Number(t.credit)||1)*(Number(t.quantity)||1); byTailor[name].credit+=cred; const m=(t.completedAt||t.createdAt||'').slice(0,7); if(m){ if(!byTailor[name].months[m]) byTailor[name].months[m]=0; if(t.status==='COMPLETED') byTailor[name].months[m]++; } });
+    tasks.forEach(t=>{ const name=(t.tailor||'Unassigned').trim()||'Unassigned'; if(!byTailor[name]) byTailor[name]={open:0,inprog:0,completed:0,credit:0,months:{}}; if(t.status==='OPEN') byTailor[name].open++; else if(t.status==='IN_PROGRESS') byTailor[name].inprog++; else if(t.status==='COMPLETED') byTailor[name].completed++; const cred=t.totalCredit!=null?Number(t.totalCredit):(Number(t.credit)||1)*(Number(t.quantity)||1); byTailor[name].credit+=isNaN(cred)?0:cred; const m=(t.CompletedAt||t.completedAt||t.CompletedAt||t.date||t.createdAt||'').slice(0,7); if(m){ if(!byTailor[name].months[m]) byTailor[name].months[m]=0; if(t.status==='COMPLETED') byTailor[name].months[m]++; } });
     const tailorNames=Object.keys(byTailor).filter(n=>n!=='Unassigned').sort((a,b)=>byTailor[b].completed - byTailor[a].completed);
     const ctxTC=document.getElementById('chartTailorCompleted'); if(ctxTC&&tailorNames.length){ destroyAnalyticsChart('tailorCompleted'); analyticsCharts['tailorCompleted']=new Chart(ctxTC,{type:'bar', data:{labels:tailorNames, datasets:[{label:'Completed', data:tailorNames.map(n=>byTailor[n].completed), backgroundColor:'#f59e0b'},{label:'In Prog', data:tailorNames.map(n=>byTailor[n].inprog), backgroundColor:'#3b82f6'},{label:'Open', data:tailorNames.map(n=>byTailor[n].open), backgroundColor:'#e5e7eb'}]}, options:{responsive:true, maintainAspectRatio:false}}); }
     const ctxCr=document.getElementById('chartTailorCredit'); if(ctxCr&&tailorNames.length){ destroyAnalyticsChart('tailorCredit'); analyticsCharts['tailorCredit']=new Chart(ctxCr,{type:'bar', data:{labels:tailorNames, datasets:[{data:tailorNames.map(n=>byTailor[n].credit), backgroundColor:'#4f46e5'}]}, options:{responsive:true, maintainAspectRatio:false, indexAxis:'y', plugins:{legend:{display:false}}}}); }
@@ -2563,8 +2606,8 @@ function renderAddedAnalytics(){
     const ctxTr=document.getElementById('chartTailorTrend'); if(ctxTr){ const allMonths=[...new Set(tailorNames.flatMap(n=>Object.keys(byTailor[n].months)))].sort(); if(allMonths.length){ destroyAnalyticsChart('tailorTrend'); const datasets=tailorNames.slice(0,5).map((name,i)=>({label:name, data:allMonths.map(m=>byTailor[name].months[m]||0), borderColor:`hsl(${i*60} 70% 50%)`, tension:.3})); analyticsCharts['tailorTrend']=new Chart(ctxTr,{type:'line', data:{labels:allMonths, datasets}, options:{responsive:true, maintainAspectRatio:false}}); } }
     const tbody=document.getElementById('tailor-perf-table'); if(tbody){ tbody.innerHTML=tailorNames.map(n=>{ const b=byTailor[n]; const total=b.open+b.inprog+b.completed; const rate=total?Math.round(b.completed/total*100):0; return `<tr class="border-b"><td class="py-1">${n}</td><td class="text-center">${b.open}</td><td class="text-center text-blue-600">${b.inprog}</td><td class="text-center text-emerald-600 font-bold">${b.completed}</td><td class="text-center font-bold">${b.credit}</td><td class="text-center"><span class="px-1.5 py-0.5 rounded-full text-[10px] ${rate>=80?'bg-emerald-100':''}">${rate}%</span></td></tr>`; }).join(''); }
 
-    // Monthly ranking
-    const byMonthTailor={}; tasks.filter(t=>t.status==='COMPLETED').forEach(t=>{ const month=(t.completedAt||t.createdAt||'').slice(0,7); if(!month) return; const tailor=(t.tailor||'Unknown').trim(); if(!byMonthTailor[month]) byMonthTailor[month]={}; if(!byMonthTailor[month][tailor]) byMonthTailor[month][tailor]={completed:0,credit:0}; byMonthTailor[month][tailor].completed++; const cred=t.totalCredit!=null?Number(t.totalCredit):(Number(t.credit)||1)*(Number(t.quantity)||1); byMonthTailor[month][tailor].credit+=cred; });
+    // Monthly ranking - FIX
+    const byMonthTailor={}; tasks.filter(t=>t.status==='COMPLETED').forEach(t=>{ const month=(t.CompletedAt||t.completedAt||t.date||t.createdAt||'').slice(0,7); if(!month) return; const tailor=(t.tailor||'Unknown').trim(); if(!byMonthTailor[month]) byMonthTailor[month]={}; if(!byMonthTailor[month][tailor]) byMonthTailor[month][tailor]={completed:0,credit:0}; byMonthTailor[month][tailor].completed++; const cred=t.totalCredit!=null?Number(t.totalCredit):(Number(t.credit)||1)*(Number(t.quantity)||1); byMonthTailor[month][tailor].credit+=isNaN(cred)?0:cred; });
     const months=Object.keys(byMonthTailor).sort(); const sel=document.getElementById('ranking-month-filter'); if(sel&&sel.options.length<=1){ months.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; sel.appendChild(o); }); }
     const selectedMonth=sel?.value||''; const latestMonth=months[months.length-1];
     const top3Div=document.getElementById('monthly-top3'); if(top3Div&&latestMonth){ const tailors=Object.entries(byMonthTailor[latestMonth]||{}).sort((a,b)=>b[1].credit-a[1].credit).slice(0,3); top3Div.innerHTML=tailors.map(([name,data],i)=>{ const medal=['🥇','🥈','🥉'][i]; return `<div class="flex justify-between bg-yellow-50 border rounded px-2 py-1 text-[11px]"><span>${medal} ${name}</span><span><b>${data.completed}</b> • ${data.credit} cr</span></div>`; }).join(''); }
@@ -2630,7 +2673,7 @@ function renderDashboardProduction(){
     const filtered = typeof getFilteredData==='function' ? getFilteredData() : {production: state.uniformProduction||[]};
     const productionList=filtered.production||[];
     const prodByType={}, prodByDept={}, prodByMonth={};
-    productionList.forEach(p=>{ const dept=p.department||'General'; const type=p.uniformType||p.item||'Unknown'; const q=Number(p.quantity)||0; if(q<=0) return; prodByType[type]=(prodByType[type]||0)+q; prodByDept[dept]=(prodByDept[dept]||0)+q; const m=(p.createdAt||p.date||'').slice(0,7); if(m) prodByMonth[m]=(prodByMonth[m]||0)+q; });
+    productionList.forEach(p=>{ const dept=p.department||'General'; const type=p.uniformType||p.whatReceived||p.item||'Unknown'; const q=Number(p.quantity)||0; if(q<=0) return; prodByType[type]=(prodByType[type]||0)+q; prodByDept[dept]=(prodByDept[dept]||0)+q; const m=(p.createdAt||p.date||p.CompletedAt||'').slice(0,7); if(m) prodByMonth[m]=(prodByMonth[m]||0)+q; });
     const prodLabels=Object.keys(prodByType).sort((a,b)=>prodByType[b]-prodByType[a]);
     const c1=document.getElementById('chartDashProdByType'); if(c1&&prodLabels.length){ destroyAnalyticsChart('dashProdType'); analyticsCharts['dashProdType']=new Chart(c1,{type:'bar', data:{labels:prodLabels, datasets:[{label:'Produced', data:prodLabels.map(k=>prodByType[k]), backgroundColor:prodLabels.map((_,i)=>`hsl(${150+i*18} 70% 50%)`), borderRadius:8, borderSkipped:false}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, grid:{color:'#f1f5f9'}}, x:{grid:{display:false}}}}}); }
     const c2=document.getElementById('chartDashProdTrend'); if(c2){ const months=Object.keys(prodByMonth).sort(); if(months.length){ destroyAnalyticsChart('dashProdTrend'); analyticsCharts['dashProdTrend']=new Chart(c2,{type:'line', data:{labels:months, datasets:[{label:'Production', data:months.map(m=>prodByMonth[m]), borderColor:'#059669', backgroundColor:'rgba(16,185,129,0.18)', fill:true, tension:0.45, pointRadius:5, pointBackgroundColor:'#059669'}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}}); } }
@@ -3067,6 +3110,5 @@ document.addEventListener('DOMContentLoaded', ()=>{
   }
 })();
 </script>
-
 </body>
 </html>
