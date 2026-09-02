@@ -577,7 +577,7 @@ html, body { pointer-events: auto !important; }
       <div class="flex justify-between items-center"><h3 class="font-bold text-sm"><i class="fa-solid fa-award mr-2 text-amber-600"></i>Tailor Performance + Ranking Bulanan</h3><div class="flex gap-2 items-center"><label class="flex items-center gap-1 text-[11px] bg-white border px-2 py-1 rounded"><input type="checkbox" id="auto-refresh-toggle" onchange="toggleAutoRefresh(this.checked)"> Auto 30s <span id="auto-refresh-countdown" class="text-[10px] text-gray-400"></span></label></div></div>
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
         
-          <div class="analytics-card lg:col-span-2"><div class="analytics-title">Credit per Bulan</div><div class="chart-wrap big"><canvas id="chartMonthlyCredit"></canvas></div></div>
+          <div class="analytics-card lg:col-span-2"><div class="analytics-title">Credit per Hari</div><div class="chart-wrap big"><canvas id="chartMonthlyCredit"></canvas></div></div>
         </div>
         
       </div>
@@ -612,7 +612,7 @@ html, body { pointer-events: auto !important; }
           <div class="text-[10px] text-gray-400 mt-2">Jenis uniform paling banyak diproduksi</div>
         </div>
         <div class="analytics-card lg:col-span-2">
-          <div class="analytics-title">Trend Production per Bulan (Line Area)</div>
+          <div class="analytics-title">Trend Production per Hari (Line Area)</div>
           <div class="chart-wrap big"><canvas id="chartDashProdTrend"></canvas></div>
           <div class="text-[10px] text-gray-400 mt-2">Tren kenaikan/penurunan produksi bulanan</div>
         </div>
@@ -1792,6 +1792,11 @@ function getMonthKey(str){
   if(!d) return '';
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
 }
+function getDayKey(str){
+  const d = parseDataDate(str);
+  if(!d) return '';
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
 function getMonthKeyFromDateObj(d){
   if(!(d instanceof Date) || isNaN(d)) return '';
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
@@ -2640,7 +2645,7 @@ function renderAddedAnalytics(){
     const recKpi=document.getElementById('received-kpi'); if(recKpi){ const total=Object.values(recByType).reduce((a,b)=>a+b,0); recKpi.innerHTML=Object.entries(recByDept).map(([d,v])=>`<div class="kpi-mini"><div class="text-[10px] font-bold text-blue-600">${d}</div><div class="font-bold">${v}</div></div>`).join('')+`<div class="bg-indigo-500 text-white rounded-xl p-3 shadow-sm border border-indigo-400"><div class="text-[10px] font-bold uppercase tracking-wide">TOTAL RECEIVED</div><div class="font-bold text-lg mt-1">${total}</div></div>`; }
 
     // Production - FIX
-    const prodByType={}, prodByDept={}, prodByMonth={};
+    const prodByType={}, prodByDept={}, prodByMonth={}; // now daily key YYYY-MM-DD
     productionList.forEach(p=>{ const dept=p.department||'General'; const type=p.uniformType||p.whatReceived||p.item||'Unknown'; const q=Number(p.quantity)||0; if(q<=0) return; prodByType[type]=(prodByType[type]||0)+q; prodByDept[dept]=(prodByDept[dept]||0)+q; const m=getMonthKey(p.createdAt||p.date||p.CompletedAt||p.completedAt||''); if(m){ prodByMonth[m]=(prodByMonth[m]||0)+q; } });
     const prodLabels=Object.keys(prodByType).sort((a,b)=>prodByType[b]-prodByType[a]);
     const cPT=document.getElementById('chartProdByType'); if(cPT&&prodLabels.length){ destroyAnalyticsChart('prodType'); analyticsCharts['prodType']=new Chart(cPT,{type:'bar', data:{labels:prodLabels, datasets:[{data:prodLabels.map(k=>prodByType[k]), backgroundColor:'#059669'}]}, options:{responsive:true, maintainAspectRatio:false}}); }
@@ -2651,7 +2656,7 @@ function renderAddedAnalytics(){
 
     // Tailor Performance - FIX for new headers date/CompletedAt
     const byTailor={};
-    tasks.forEach(t=>{ const name=(t.tailor||'Unassigned').trim()||'Unassigned'; if(!byTailor[name]) byTailor[name]={open:0,inprog:0,completed:0,credit:0,months:{}}; if(t.status==='OPEN') byTailor[name].open++; else if(t.status==='IN_PROGRESS') byTailor[name].inprog++; else if(t.status==='COMPLETED') byTailor[name].completed++; const cred=t.totalCredit!=null?Number(t.totalCredit):(Number(t.credit)||1)*(Number(t.quantity)||1); byTailor[name].credit+=isNaN(cred)?0:cred; const m=getMonthKey(t.CompletedAt||t.completedAt||t.date||t.createdAt||''); if(m){ if(!byTailor[name].months[m]) byTailor[name].months[m]=0; if(t.status==='COMPLETED') byTailor[name].months[m]++; } });
+    tasks.forEach(t=>{ const name=(t.tailor||'Unassigned').trim()||'Unassigned'; if(!byTailor[name]) byTailor[name]={open:0,inprog:0,completed:0,credit:0,months:{}}; if(t.status==='OPEN') byTailor[name].open++; else if(t.status==='IN_PROGRESS') byTailor[name].inprog++; else if(t.status==='COMPLETED') byTailor[name].completed++; const cred=t.totalCredit!=null?Number(t.totalCredit):(Number(t.credit)||1)*(Number(t.quantity)||1); byTailor[name].credit+=isNaN(cred)?0:cred; const m=getDayKey(t.CompletedAt||t.completedAt||t.date||t.createdAt||''); if(m){ if(!byTailor[name].months[m]) byTailor[name].months[m]=0; if(t.status==='COMPLETED') byTailor[name].months[m]++; } });
     const tailorNames=Object.keys(byTailor).filter(n=>n!=='Unassigned').sort((a,b)=>byTailor[b].completed - byTailor[a].completed);
     const ctxTC=document.getElementById('chartTailorCompleted'); if(ctxTC&&tailorNames.length){ destroyAnalyticsChart('tailorCompleted'); analyticsCharts['tailorCompleted']=new Chart(ctxTC,{type:'bar', data:{labels:tailorNames, datasets:[{label:'Completed', data:tailorNames.map(n=>byTailor[n].completed), backgroundColor:'#f59e0b'},{label:'In Prog', data:tailorNames.map(n=>byTailor[n].inprog), backgroundColor:'#3b82f6'},{label:'Open', data:tailorNames.map(n=>byTailor[n].open), backgroundColor:'#e5e7eb'}]}, options:{responsive:true, maintainAspectRatio:false}}); }
     const ctxCr=document.getElementById('chartTailorCredit'); if(ctxCr&&tailorNames.length){ destroyAnalyticsChart('tailorCredit'); analyticsCharts['tailorCredit']=new Chart(ctxCr,{type:'bar', data:{labels:tailorNames, datasets:[{data:tailorNames.map(n=>byTailor[n].credit), backgroundColor:'#4f46e5'}]}, options:{responsive:true, maintainAspectRatio:false, indexAxis:'y', plugins:{legend:{display:false}}}}); }
@@ -2661,7 +2666,7 @@ function renderAddedAnalytics(){
     const tbody=document.getElementById('tailor-perf-table'); if(tbody){ tbody.innerHTML=tailorNames.map(n=>{ const b=byTailor[n]; const total=b.open+b.inprog+b.completed; const rate=total?Math.round(b.completed/total*100):0; return `<tr class="border-b"><td class="py-1">${n}</td><td class="text-center">${b.open}</td><td class="text-center text-blue-600">${b.inprog}</td><td class="text-center text-emerald-600 font-bold">${b.completed}</td><td class="text-center font-bold">${b.credit}</td><td class="text-center"><span class="px-1.5 py-0.5 rounded-full text-[10px] ${rate>=80?'bg-emerald-100':''}">${rate}%</span></td></tr>`; }).join(''); }
 
     // Monthly ranking - FIX
-    const byMonthTailor={}; tasks.filter(t=>t.status==='COMPLETED').forEach(t=>{ const month=getMonthKey(t.CompletedAt||t.completedAt||t.date||t.createdAt||''); if(!month) return; const tailor=(t.tailor||'Unknown').trim(); if(!byMonthTailor[month]) byMonthTailor[month]={}; if(!byMonthTailor[month][tailor]) byMonthTailor[month][tailor]={completed:0,credit:0}; byMonthTailor[month][tailor].completed++; const cred=t.totalCredit!=null?Number(t.totalCredit):(Number(t.credit)||1)*(Number(t.quantity)||1); byMonthTailor[month][tailor].credit+=isNaN(cred)?0:cred; });
+    const byMonthTailor={}; tasks.filter(t=>t.status==='COMPLETED').forEach(t=>{ const month=getDayKey(t.CompletedAt||t.completedAt||t.date||t.createdAt||''); if(!month) return; const tailor=(t.tailor||'Unknown').trim(); if(!byMonthTailor[month]) byMonthTailor[month]={}; if(!byMonthTailor[month][tailor]) byMonthTailor[month][tailor]={completed:0,credit:0}; byMonthTailor[month][tailor].completed++; const cred=t.totalCredit!=null?Number(t.totalCredit):(Number(t.credit)||1)*(Number(t.quantity)||1); byMonthTailor[month][tailor].credit+=isNaN(cred)?0:cred; });
     const months=Object.keys(byMonthTailor).sort(); const sel=document.getElementById('ranking-month-filter'); if(sel&&sel.options.length<=1){ months.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; sel.appendChild(o); }); }
     const selectedMonth=sel?.value||''; const latestMonth=months[months.length-1];
     const top3Div=document.getElementById('monthly-top3'); if(top3Div&&latestMonth){ const tailors=Object.entries(byMonthTailor[latestMonth]||{}).sort((a,b)=>b[1].credit-a[1].credit).slice(0,3); top3Div.innerHTML=tailors.map(([name,data],i)=>{ const medal=['🥇','🥈','🥉'][i]; return `<div class="flex justify-between bg-yellow-50 border rounded px-2 py-1 text-[11px]"><span>${medal} ${name}</span><span><b>${data.completed}</b> • ${data.credit} cr</span></div>`; }).join(''); }
@@ -2726,8 +2731,8 @@ function renderDashboardProduction(){
   try{
     const filtered = typeof getFilteredData==='function' ? getFilteredData() : {production: state.uniformProduction||[]};
     const productionList=filtered.production||[];
-    const prodByType={}, prodByDept={}, prodByMonth={};
-    productionList.forEach(p=>{ const dept=p.department||'General'; const type=p.uniformType||p.whatReceived||p.item||'Unknown'; const q=Number(p.quantity)||0; if(q<=0) return; prodByType[type]=(prodByType[type]||0)+q; prodByDept[dept]=(prodByDept[dept]||0)+q; const m=getMonthKey(p.createdAt||p.date||p.CompletedAt||''); if(m) prodByMonth[m]=(prodByMonth[m]||0)+q; });
+    const prodByType={}, prodByDept={}, prodByMonth={}; // now daily key YYYY-MM-DD
+    productionList.forEach(p=>{ const dept=p.department||'General'; const type=p.uniformType||p.whatReceived||p.item||'Unknown'; const q=Number(p.quantity)||0; if(q<=0) return; prodByType[type]=(prodByType[type]||0)+q; prodByDept[dept]=(prodByDept[dept]||0)+q; const m=getDayKey(p.createdAt||p.date||p.CompletedAt||''); if(m) prodByMonth[m]=(prodByMonth[m]||0)+q; });
     const prodLabels=Object.keys(prodByType).sort((a,b)=>prodByType[b]-prodByType[a]);
     const c1=document.getElementById('chartDashProdByType'); if(c1&&prodLabels.length){ destroyAnalyticsChart('dashProdType'); analyticsCharts['dashProdType']=new Chart(c1,{type:'bar', data:{labels:prodLabels, datasets:[{label:'Produced', data:prodLabels.map(k=>prodByType[k]), backgroundColor:prodLabels.map((_,i)=>`hsl(${150+i*18} 70% 50%)`), borderRadius:8, borderSkipped:false}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, grid:{color:'#f1f5f9'}}, x:{grid:{display:false}}}}}); }
     const c2=document.getElementById('chartDashProdTrend'); if(c2){ const months=Object.keys(prodByMonth).sort(); if(months.length){ destroyAnalyticsChart('dashProdTrend'); analyticsCharts['dashProdTrend']=new Chart(c2,{type:'line', data:{labels:months, datasets:[{label:'Production', data:months.map(m=>prodByMonth[m]), borderColor:'#059669', backgroundColor:'rgba(16,185,129,0.18)', fill:true, tension:0.45, pointRadius:5, pointBackgroundColor:'#059669'}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}}); } }
