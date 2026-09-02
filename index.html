@@ -1705,7 +1705,7 @@ html, body { pointer-events: auto !important; }
 
 <script>
 let state = {
-  apiUrl: 'https://script.google.com/macros/s/AKfycbzLheSdKn2-PpnvLQXQvfrq69jaHLUjJDpfHDlHA1Y21ZLJUXd_yqpy2bl2SNumMbmf/exec',
+  apiUrl: 'https://script.google.com/macros/s/AKfycbwTjQ2QWTFjGlk69X1CR53w1SHbAq1DHIUV83Bk82tlnG-4_K79wu4jNCQpxTxEr2AU/exec',
   tasks: [],
   uniformReceived: [],
   uniformProduction: [],
@@ -1743,7 +1743,6 @@ function toggleTheme(){
 /* === DATE FILTER LOGIC - FIXED: konsisten dd/MM/yyyy dari Apps Script === */
 function parseDateValue(val){
   if(!val) return null;
-  // input type=date = YYYY-MM-DD, parse sebagai local date (bukan UTC) agar tidak geser 1 hari
   const s = String(val).trim().slice(0,10);
   const m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
   if(m){
@@ -1756,16 +1755,12 @@ function parseDateValue(val){
 }
 function parseDataDate(str){
   if(!str) return null;
-  // Jika sudah Date object (dari Sheet atau JS)
   if(str instanceof Date){
     const d = new Date(str); d.setHours(0,0,0,0); return isNaN(d)?null:d;
   }
   const s = String(str).trim();
   if(!s) return null;
   let d;
-
-  // 1) PRIORITAS: format Apps Script = dd/MM/yyyy HH:mm atau dd/MM/yyyy
-  // Contoh: 02/09/2026 14:30 atau 2/9/2026
   let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?$/);
   if(m){
     let da = parseInt(m[1],10), mo = parseInt(m[2],10)-1, y = parseInt(m[3],10);
@@ -1773,32 +1768,25 @@ function parseDataDate(str){
     d = new Date(y, mo, da);
     if(!isNaN(d)){ d.setHours(0,0,0,0); return d; }
   }
-  // 2) dd-MM-yyyy HH:mm
   m = s.match(/^(\d{1,2})-(\d{1,2})-(\d{2,4})(?:\s+.*)?$/);
   if(m){
     let da = parseInt(m[1],10), mo = parseInt(m[2],10)-1, y = parseInt(m[3],10);
     if(y<100) y+=2000;
-    // Validasi month 0-11
     if(mo>=0 && mo<=11){
       d = new Date(y, mo, da);
       if(!isNaN(d)){ d.setHours(0,0,0,0); return d; }
     }
   }
-  // 3) ISO YYYY-MM-DD atau YYYY/MM/DD dengan jam
   m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})(?:[T\s].*)?$/);
   if(m){
     let y=parseInt(m[1],10), mo=parseInt(m[2],10)-1, da=parseInt(m[3],10);
     d = new Date(y, mo, da);
     if(!isNaN(d)){ d.setHours(0,0,0,0); return d; }
   }
-
-  // 4) Fallback terakhir: coba Date parse native, tapi sudah aman karena format dd/MM sudah ditangani di atas
   d = new Date(s);
   if(!isNaN(d)){ d.setHours(0,0,0,0); return d; }
-
   return null;
 }
-// Helper konsisten untuk ambil YYYY-MM dari berbagai format tanggal (fix untuk .slice(0,7) yang rusak)
 function getMonthKey(str){
   const d = parseDataDate(str);
   if(!d) return '';
@@ -2653,7 +2641,7 @@ function renderAddedAnalytics(){
 
     // Production - FIX
     const prodByType={}, prodByDept={}, prodByMonth={};
-    productionList.forEach(p=>{ const dept=p.department||'General'; const type=p.uniformType||p.whatReceived||p.item||'Unknown'; const q=Number(p.quantity)||0; if(q<=0) return; prodByType[type]=(prodByType[type]||0)+q; prodByDept[dept]=(prodByDept[dept]||0)+q; const mk=getMonthKey(p.createdAt||p.date||p.CompletedAt||p.completedAt||''); if(mk){ prodByMonth[mk]=(prodByMonth[mk]||0)+q; } });
+    productionList.forEach(p=>{ const dept=p.department||'General'; const type=p.uniformType||p.whatReceived||p.item||'Unknown'; const q=Number(p.quantity)||0; if(q<=0) return; prodByType[type]=(prodByType[type]||0)+q; prodByDept[dept]=(prodByDept[dept]||0)+q; const m=getMonthKey(p.createdAt||p.date||p.CompletedAt||p.completedAt||''); if(m){ prodByMonth[m]=(prodByMonth[m]||0)+q; } });
     const prodLabels=Object.keys(prodByType).sort((a,b)=>prodByType[b]-prodByType[a]);
     const cPT=document.getElementById('chartProdByType'); if(cPT&&prodLabels.length){ destroyAnalyticsChart('prodType'); analyticsCharts['prodType']=new Chart(cPT,{type:'bar', data:{labels:prodLabels, datasets:[{data:prodLabels.map(k=>prodByType[k]), backgroundColor:'#059669'}]}, options:{responsive:true, maintainAspectRatio:false}}); }
     const cPTr=document.getElementById('chartProdTrend'); if(cPTr){ const months=Object.keys(prodByMonth).sort(); destroyAnalyticsChart('prodTrend'); if(months.length) analyticsCharts['prodTrend']=new Chart(cPTr,{type:'line', data:{labels:months, datasets:[{label:'Production', data:months.map(m=>prodByMonth[m]), borderColor:'#059669', backgroundColor:'rgba(5,150,105,.15)', fill:true, tension:.4}]}, options:{responsive:true, maintainAspectRatio:false}}); }
@@ -2663,7 +2651,7 @@ function renderAddedAnalytics(){
 
     // Tailor Performance - FIX for new headers date/CompletedAt
     const byTailor={};
-    tasks.forEach(t=>{ const name=(t.tailor||'Unassigned').trim()||'Unassigned'; if(!byTailor[name]) byTailor[name]={open:0,inprog:0,completed:0,credit:0,months:{}}; if(t.status==='OPEN') byTailor[name].open++; else if(t.status==='IN_PROGRESS') byTailor[name].inprog++; else if(t.status==='COMPLETED') byTailor[name].completed++; const cred=t.totalCredit!=null?Number(t.totalCredit):(Number(t.credit)||1)*(Number(t.quantity)||1); byTailor[name].credit+=isNaN(cred)?0:cred; const m=getMonthKey(t.CompletedAt||t.completedAt||t.date||t.createdAt||'')ompletedAt||t.CompletedAt||t.date||t.createdAt||'').slice(0,7); if(m){ if(!byTailor[name].months[m]) byTailor[name].months[m]=0; if(t.status==='COMPLETED') byTailor[name].months[m]++; } });
+    tasks.forEach(t=>{ const name=(t.tailor||'Unassigned').trim()||'Unassigned'; if(!byTailor[name]) byTailor[name]={open:0,inprog:0,completed:0,credit:0,months:{}}; if(t.status==='OPEN') byTailor[name].open++; else if(t.status==='IN_PROGRESS') byTailor[name].inprog++; else if(t.status==='COMPLETED') byTailor[name].completed++; const cred=t.totalCredit!=null?Number(t.totalCredit):(Number(t.credit)||1)*(Number(t.quantity)||1); byTailor[name].credit+=isNaN(cred)?0:cred; const m=getMonthKey(t.CompletedAt||t.completedAt||t.date||t.createdAt||''); if(m){ if(!byTailor[name].months[m]) byTailor[name].months[m]=0; if(t.status==='COMPLETED') byTailor[name].months[m]++; } });
     const tailorNames=Object.keys(byTailor).filter(n=>n!=='Unassigned').sort((a,b)=>byTailor[b].completed - byTailor[a].completed);
     const ctxTC=document.getElementById('chartTailorCompleted'); if(ctxTC&&tailorNames.length){ destroyAnalyticsChart('tailorCompleted'); analyticsCharts['tailorCompleted']=new Chart(ctxTC,{type:'bar', data:{labels:tailorNames, datasets:[{label:'Completed', data:tailorNames.map(n=>byTailor[n].completed), backgroundColor:'#f59e0b'},{label:'In Prog', data:tailorNames.map(n=>byTailor[n].inprog), backgroundColor:'#3b82f6'},{label:'Open', data:tailorNames.map(n=>byTailor[n].open), backgroundColor:'#e5e7eb'}]}, options:{responsive:true, maintainAspectRatio:false}}); }
     const ctxCr=document.getElementById('chartTailorCredit'); if(ctxCr&&tailorNames.length){ destroyAnalyticsChart('tailorCredit'); analyticsCharts['tailorCredit']=new Chart(ctxCr,{type:'bar', data:{labels:tailorNames, datasets:[{data:tailorNames.map(n=>byTailor[n].credit), backgroundColor:'#4f46e5'}]}, options:{responsive:true, maintainAspectRatio:false, indexAxis:'y', plugins:{legend:{display:false}}}}); }
