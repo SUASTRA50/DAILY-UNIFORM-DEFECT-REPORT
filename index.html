@@ -2647,7 +2647,7 @@ function renderDefectDeptStacked(mode){
       label: it,
       data: deptLabels.map(d=> (mapToUse[d]&&mapToUse[d][it])||0 ),
       backgroundColor: colorMap[it],
-      borderRadius: 3,
+      borderRadius:{topLeft:12, topRight:12, bottomLeft:0, bottomRight:0},
       borderSkipped: false
     }));
     const el=document.getElementById('chartDefectByDept');
@@ -2657,13 +2657,17 @@ function renderDefectDeptStacked(mode){
       type:'bar',
       data:{labels:deptLabels, datasets:stackedDatasets},
       options:{
-        responsive:true, maintainAspectRatio:false, indexAxis:'y',
+        responsive:true, maintainAspectRatio:false, indexAxis:'x',
         interaction:{mode:'index', intersect:false},
         plugins:{
           legend:{position:'bottom', labels:{boxWidth:12, font:{size:10}}},
-          tooltip:{ callbacks:{ footer:(items)=>{ const total=items.reduce((a,c)=>a+c.parsed.x,0); return 'Total: '+total; } } }
+          tooltip:{ callbacks:{ footer:(items)=>{ const total=items.reduce((a,c)=>a+c.parsed.y,0); return 'Total: '+total; } } }
         },
-        scales:{x:{beginAtZero:true, stacked:true}, y:{stacked:true, grid:{display:false}}}
+        scales:{
+          x:{stacked:true, grid:{display:false}, ticks:{maxRotation:45, minRotation:30, autoSkip:false, font:{size:10}}},
+          y:{beginAtZero:true, stacked:true, grid:{color:'#f5f5f7'}}
+        },
+        elements:{ bar:{ borderRadius:{topLeft:12, topRight:12, bottomLeft:0, bottomRight:0}, borderSkipped:false } }
       }
     });
     const s=document.getElementById('defect-by-dept-summary');
@@ -2729,7 +2733,9 @@ function renderAddedAnalytics(){
     if(elDefItem){ 
       const labels=Object.keys(byDefectItem).sort((a,b)=>byDefectItem[b]-byDefectItem[a]).slice(0,10); 
       destroyAnalyticsChart('defectByItem'); 
-      analyticsCharts['defectByItem']=new Chart(elDefItem,{type:'bar', data:{labels, datasets:[{label:'Defect', data:labels.map(k=>byDefectItem[k]), backgroundColor:'#2563eb', borderRadius:6}]}, options:{responsive:true, maintainAspectRatio:false, indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true}, y:{grid:{display:false}}}}}); 
+      const _refColors = ['#00E676','#4DD0E1','#64B5F6','#7C9AF0','#8E8CFF','#A07BFF','#B06CFF','#C05DFF','#B388FF','#C4A0FF','#CE93D8','#F48FB1'];
+      const _barColors = labels.map((_,i)=> _refColors[i % _refColors.length]);
+      analyticsCharts['defectByItem']=new Chart(elDefItem,{type:'bar', data:{labels, datasets:[{label:'Defect', data:labels.map(k=>byDefectItem[k]), backgroundColor:_barColors, borderRadius:12, borderSkipped:false, barThickness:32, maxBarThickness:36}]}, options:{responsive:true, maintainAspectRatio:false, indexAxis:'x', plugins:{legend:{display:false}}, scales:{x:{grid:{display:false}, ticks:{maxRotation:45, minRotation:30, autoSkip:false, font:{size:10}}, border:{display:false}}, y:{beginAtZero:true, grid:{color:'#f5f5f7'}, border:{display:false}}}}}); 
       const s=document.getElementById('defect-by-item-summary'); if(s) s.innerHTML = labels.length? `Tertinggi: <b>${labels[0]}</b> (${byDefectItem[labels[0]]})` : 'Tidak ada data';
     }
     document.getElementById('inputter-summary').innerHTML = inputLabels.length? `Top: <b>${inputLabels[0]}</b> (${inputVals[0]}) dari ${inputVals.reduce((a,b)=>a+b,0)}` : '';
