@@ -562,15 +562,15 @@ html, body { pointer-events: auto !important; }
 
 
     <!-- MODIFIED: Hapus Per Jenis Uniform, tambah Defect Summary by Department & by Item -->
-    <div class="mt-8 pt-6 border-t">
-        <h3 class="font-bold text-sm mb-4"><i class="fa-solid fa-box-archive mr-2 text-indigo-600"></i>Uniform Received</h3>
-      </div>
-    <div id="received-analytics-section" class="space-y-4">
+    <div id="received-analytics-section" class="mt-8 pt-6 border-t space-y-4">
         <h3 class="font-bold text-sm"><i class="fa-solid fa-bug mr-2 text-rose-600"></i>Defect Summary Analysis (Sesuai Filter)</h3>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <div class="analytics-card"><div class="analytics-title flex justify-between items-center gap-2"><span>Defect per Departemen</span><div class="flex gap-1 bg-slate-100 p-1 rounded-full"><button id="btn-stack-item" onclick="switchDefectDeptView('item')" class="px-3 py-1 text-[10px] font-semibold rounded-full bg-slate-900 text-white transition">By Item</button><button id="btn-stack-defect" onclick="switchDefectDeptView('defect')" class="px-3 py-1 text-[10px] font-semibold rounded-full bg-white text-slate-600 transition">By Defect Type</button></div></div><div class="chart-wrap compact-chart"><canvas id="chartDefectByDept"></canvas></div><div id="defect-by-dept-summary" class="mt-2 text-[11px] text-gray-500 bg-slate-50 p-2 rounded"></div></div>
           <div class="analytics-card"><div class="analytics-title">Defect per Item</div><div class="chart-wrap compact-chart"><canvas id="chartDefectByItem"></canvas></div><div id="defect-by-item-summary" class="mt-2 text-[11px] text-gray-500 bg-slate-50 p-2 rounded"></div></div>
         </div>
+        <div class="mt-8 pt-6 border-t">
+        <h3 class="font-bold text-sm mb-4"><i class="fa-solid fa-box-archive mr-2 text-indigo-600"></i>Uniform Received</h3>
+      </div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-4">
           <div class="analytics-card"><div class="analytics-title">Per Departemen (Received)</div><div class="chart-wrap compact-chart"><canvas id="chartReceivedByDept"></canvas></div></div>
           <div class="analytics-card"><div class="analytics-title">Stacked Jenis vs Departemen</div><div class="chart-wrap compact-chart"><canvas id="chartReceivedStacked"></canvas></div></div>
@@ -983,7 +983,7 @@ html, body { pointer-events: auto !important; }
               <option value="P&C">P&C</option>
               <option value="Wellness">Wellness</option>
               <option value="Sales & Executive">Sales & Executive</option>
-            
+              
             </select>
           </div>
         </div>
@@ -1524,7 +1524,7 @@ html, body { pointer-events: auto !important; }
                 <option value="P&C">P&C</option>
                 <option value="Wellness">Wellness</option>
                 <option value="Sales & Executive">Sales & Executive</option>
-                
+               
             </select>
           </div>
         </div>
@@ -2625,66 +2625,65 @@ let analyticsCharts={};
 function destroyAnalyticsChart(id){ if(analyticsCharts[id]){ try{analyticsCharts[id].destroy();}catch(e){} delete analyticsCharts[id]; } }
 
 function renderDefectDeptStacked(mode){
-  const data = window._defectDeptData;
-  if(!data) return;
-  const { byDefectDept, deptItemMap, byDefectItem } = data;
-  const deptDefectMap = data.deptDefectMap || window._deptDefectMapTemp || {};
-  const byDefectType = window._byDefectTypeTemp || {};
-  const deptLabels=Object.keys(byDefectDept).sort((a,b)=>byDefectDept[b]-byDefectDept[a]);
-  if(!deptLabels.length) return;
-  let itemLabels, mapToUse, palette;
-  if(mode==='defect'){
-    itemLabels=Object.keys(byDefectType).sort((a,b)=>byDefectType[b]-byDefectType[a]);
-    mapToUse=deptDefectMap;
-    palette=['#dc2626','#ea580c','#d97706','#ca8a04','#65a30d','#16a34a','#059669','#0891b2','#2563eb','#7c3aed','#c026d3','#e11d48'];
-  }else{
-    itemLabels=Object.keys(byDefectItem).sort((a,b)=>byDefectItem[b]-byDefectItem[a]);
-    mapToUse=deptItemMap;
-    palette=['#e11d48','#2563eb','#0ea5e9','#10b981','#f59e0b','#8b5cf6','#ec4899','#06b6d4','#f97316','#84cc16','#6366f1','#14b8a6'];
-  }
-  const colorMap={}; itemLabels.forEach((it,i)=>{ colorMap[it]=palette[i%palette.length]; });
-  const stackedDatasets=itemLabels.map(it=>({
-    label: it,
-    data: deptLabels.map(d=> (mapToUse[d]&&mapToUse[d][it])||0 ),
-    backgroundColor: colorMap[it],
-    borderRadius: 3,
-    borderSkipped: false
-  }));
-  const elDefDept=document.getElementById('chartDefectByDept');
-  if(!elDefDept) return;
-  destroyAnalyticsChart('defectByDept');
-  analyticsCharts['defectByDept']=new Chart(elDefDept,{
-    type:'bar',
-    data:{labels:deptLabels, datasets:stackedDatasets},
-    options:{
-      responsive:true, maintainAspectRatio:false, indexAxis:'y',
-      interaction:{mode:'index', intersect:false},
-      plugins:{
-        legend:{position:'bottom', labels:{boxWidth:12, font:{size:10}}},
-        tooltip:{ callbacks:{ footer:(items)=>{ const total=items.reduce((a,c)=>a+c.parsed.x,0); return 'Total: '+total; } } }
-      },
-      scales:{x:{beginAtZero:true, stacked:true}, y:{stacked:true, grid:{display:false}}}
+  try{
+    const data = window._defectDeptData;
+    if(!data) return;
+    const { byDefectDept, deptItemMap, byDefectItem, deptDefectMap, byDefectType } = data;
+    const deptLabels=Object.keys(byDefectDept).sort((a,b)=>byDefectDept[b]-byDefectDept[a]);
+    if(!deptLabels.length){ const s=document.getElementById('defect-by-dept-summary'); if(s) s.innerHTML='Tidak ada data'; return; }
+    let itemLabels, mapToUse, palette;
+    if(mode==='defect'){
+      itemLabels=Object.keys(byDefectType).sort((a,b)=>byDefectType[b]-byDefectType[a]);
+      mapToUse=deptDefectMap;
+      palette=['#dc2626','#ea580c','#d97706','#ca8a04','#65a30d','#16a34a','#059669','#0891b2','#2563eb','#7c3aed','#c026d3','#e11d48'];
+    }else{
+      itemLabels=Object.keys(byDefectItem).sort((a,b)=>byDefectItem[b]-byDefectItem[a]);
+      mapToUse=deptItemMap;
+      palette=['#e11d48','#2563eb','#0ea5e9','#10b981','#f59e0b','#8b5cf6','#ec4899','#06b6d4','#f97316','#84cc16','#6366f1','#14b8a6'];
     }
-  });
-  const s=document.getElementById('defect-by-dept-summary');
-  if(s){
-    let html=`Tertinggi: <b>${deptLabels[0]}</b> (${byDefectDept[deptLabels[0]]}) - Mode: <b>${mode==='defect'?'Defect Type':'Item'}</b><br>`;
-    deptLabels.slice(0,5).forEach(d=>{
-      const breakdown=mapToUse[d]||{};
-      const sorted=Object.keys(breakdown).sort((a,b)=>breakdown[b]-breakdown[a]);
-      const detail=sorted.map(it=>`${it} (${breakdown[it]})`).join(', ');
-      html+=`<div class="mt-1"><b>${d}</b> [${byDefectDept[d]}]: <span class="text-gray-600">${detail}</span></div>`;
+    const colorMap={}; itemLabels.forEach((it,i)=>{ colorMap[it]=palette[i%palette.length]; });
+    const stackedDatasets=itemLabels.map(it=>({
+      label: it,
+      data: deptLabels.map(d=> (mapToUse[d]&&mapToUse[d][it])||0 ),
+      backgroundColor: colorMap[it],
+      borderRadius: 3,
+      borderSkipped: false
+    }));
+    const el=document.getElementById('chartDefectByDept');
+    if(!el) return;
+    destroyAnalyticsChart('defectByDept');
+    analyticsCharts['defectByDept']=new Chart(el,{
+      type:'bar',
+      data:{labels:deptLabels, datasets:stackedDatasets},
+      options:{
+        responsive:true, maintainAspectRatio:false, indexAxis:'y',
+        interaction:{mode:'index', intersect:false},
+        plugins:{
+          legend:{position:'bottom', labels:{boxWidth:12, font:{size:10}}},
+          tooltip:{ callbacks:{ footer:(items)=>{ const total=items.reduce((a,c)=>a+c.parsed.x,0); return 'Total: '+total; } } }
+        },
+        scales:{x:{beginAtZero:true, stacked:true}, y:{stacked:true, grid:{display:false}}}
+      }
     });
-    s.innerHTML=html;
-  }
-  // update button active state
-  const bItem=document.getElementById('btn-stack-item');
-  const bDef=document.getElementById('btn-stack-defect');
-  if(bItem&&bDef){
-    if(mode==='defect'){ bDef.className='px-3 py-1 text-[10px] font-semibold rounded-full bg-slate-900 text-white transition'; bItem.className='px-3 py-1 text-[10px] font-semibold rounded-full bg-white text-slate-600 transition'; }
-    else { bItem.className='px-3 py-1 text-[10px] font-semibold rounded-full bg-slate-900 text-white transition'; bDef.className='px-3 py-1 text-[10px] font-semibold rounded-full bg-white text-slate-600 transition'; }
-  }
-  window._defectDeptCurrentMode=mode;
+    const s=document.getElementById('defect-by-dept-summary');
+    if(s){
+      let html=`Tertinggi: <b>${deptLabels[0]}</b> (${byDefectDept[deptLabels[0]]}) - Mode: <b>${mode==='defect'?'Defect Type':'Item'}</b><br>`;
+      deptLabels.slice(0,5).forEach(d=>{
+        const breakdown=mapToUse[d]||{};
+        const sorted=Object.keys(breakdown).sort((a,b)=>breakdown[b]-breakdown[a]);
+        const detail=sorted.map(it=>`${it} (${breakdown[it]})`).join(', ');
+        html+=`<div class="mt-1"><b>${d}</b> [${byDefectDept[d]}]: <span class="text-gray-600">${detail}</span></div>`;
+      });
+      s.innerHTML=html;
+    }
+    const bItem=document.getElementById('btn-stack-item');
+    const bDef=document.getElementById('btn-stack-defect');
+    if(bItem&&bDef){
+      if(mode==='defect'){ bDef.className='px-3 py-1 text-[10px] font-semibold rounded-full bg-slate-900 text-white transition'; bItem.className='px-3 py-1 text-[10px] font-semibold rounded-full bg-white text-slate-600 transition'; }
+      else { bItem.className='px-3 py-1 text-[10px] font-semibold rounded-full bg-slate-900 text-white transition'; bDef.className='px-3 py-1 text-[10px] font-semibold rounded-full bg-white text-slate-600 transition'; }
+    }
+    window._defectDeptCurrentMode=mode;
+  }catch(e){ console.error('renderDefectDeptStacked error', e); }
 }
 function switchDefectDeptView(mode){
   renderDefectDeptStacked(mode);
@@ -2705,7 +2704,7 @@ function renderAddedAnalytics(){
     const elI=document.getElementById('chartInputter'); if(elI){ destroyAnalyticsChart('inputter'); analyticsCharts['inputter']=new Chart(elI,{type:'bar', data:{labels:inputLabels, datasets:[{label:'Input', data:inputVals, backgroundColor:'#4f46e5', borderRadius:6}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}}); }
     const elD=document.getElementById('chartDefect'); if(elD){ const dLabels=Object.keys(byDefect).sort((a,b)=>byDefect[b]-byDefect[a]).slice(0,8); destroyAnalyticsChart('defect'); analyticsCharts['defect']=new Chart(elD,{type:'doughnut', data:{labels:dLabels, datasets:[{data:dLabels.map(k=>byDefect[k]), backgroundColor:['#ef4444','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ec4899','#06b6d4','#f97316']}]}, options:{responsive:true, maintainAspectRatio:false, cutout:'60%', plugins:{legend:{position:'bottom'}}}}); document.getElementById('defect-summary').innerHTML = dLabels.length? `Terbanyak: <b>${dLabels[0]}</b> (${byDefect[dLabels[0]]}x)` : ''; }
 
-    // NEW: Defect by Department STACKED by Item / Defect (sesuai filter)
+    // NEW: Defect by Department STACKED by Item / Defect Type - FINAL (toggle By Item / By Defect Type tetap ada, tidak dihilangkan)
     const byDefectDept={}, byDefectItem={}, deptItemMap={}, deptDefectMap={}, byDefectType={};
     tasks.forEach(t=>{ 
       const dept=(t.department||'Unknown').trim(); 
@@ -2719,62 +2718,11 @@ function renderAddedAnalytics(){
       if(!deptDefectMap[dept]) deptDefectMap[dept]={};
       deptDefectMap[dept][defect]=(deptDefectMap[dept][defect]||0)+1;
     });
-    window._deptDefectMapTemp = deptDefectMap; window._byDefectTypeTemp = byDefectType;
-    const elDefDept=document.getElementById('chartDefectByDept'); 
-    if(elDefDept){ 
-      const deptLabels=Object.keys(byDefectDept).sort((a,b)=>byDefectDept[b]-byDefectDept[a]);
-      const itemLabels=Object.keys(byDefectItem).sort((a,b)=>byDefectItem[b]-byDefectItem[a]);
-      // warna konsisten per item
-      const palette=['#e11d48','#2563eb','#0ea5e9','#10b981','#f59e0b','#8b5cf6','#ec4899','#06b6d4','#f97316','#84cc16','#6366f1','#14b8a6'];
-      const colorMap={}; itemLabels.forEach((it,i)=>{ colorMap[it]=palette[i%palette.length]; });
-      const stackedDatasets=itemLabels.map(it=>({
-        label: it,
-        data: deptLabels.map(d=> (deptItemMap[d]&&deptItemMap[d][it])||0 ),
-        backgroundColor: colorMap[it],
-        borderRadius: 3,
-        borderSkipped: false
-      }));
-      destroyAnalyticsChart('defectByDept'); 
-      analyticsCharts['defectByDept']=new Chart(elDefDept,{
-        type:'bar',
-        data:{labels:deptLabels, datasets:stackedDatasets},
-        options:{
-          responsive:true, maintainAspectRatio:false, indexAxis:'y',
-          interaction:{mode:'index', intersect:false},
-          plugins:{
-            legend:{position:'bottom', labels:{boxWidth:12, font:{size:10}}},
-            tooltip:{
-              callbacks:{
-                footer:(items)=>{ const total=items.reduce((a,c)=>a+c.parsed.x,0); return 'Total: '+total; }
-              }
-            }
-          },
-          scales:{x:{beginAtZero:true, stacked:true}, y:{stacked:true, grid:{display:false}}}
-        }
-      }); 
-      // Simpan untuk toggle global
-      window._defectDeptData = { byDefectDept, deptItemMap, byDefectItem, deptDefectMap: window._deptDefectMapTemp };
+    window._defectDeptData = { byDefectDept, deptItemMap, byDefectItem, deptDefectMap, byDefectType };
+    const elDefDept=document.getElementById('chartDefectByDept');
+    if(elDefDept){
       window._defectDeptCurrentMode = window._defectDeptCurrentMode || 'item';
-      // render dengan mode saat ini
-      if(typeof renderDefectDeptStacked === 'function'){
-        renderDefectDeptStacked(window._defectDeptCurrentMode);
-      } else {
-        // fallback summary item mode
-        const s=document.getElementById('defect-by-dept-summary');
-        if(s){
-          if(!deptLabels.length){ s.innerHTML='Tidak ada data'; }
-          else {
-            let html=`Tertinggi: <b>${deptLabels[0]}</b> (${byDefectDept[deptLabels[0]]})<br>`;
-            deptLabels.slice(0,5).forEach(d=>{
-              const breakdown=deptItemMap[d]||{};
-              const itemsSorted=Object.keys(breakdown).sort((a,b)=>breakdown[b]-breakdown[a]);
-              const detail=itemsSorted.map(it=>`${it} (${breakdown[it]})`).join(', ');
-              html+=`<div class="mt-1"><b>${d}</b> [${byDefectDept[d]}]: <span class="text-gray-600">${detail}</span></div>`;
-            });
-            s.innerHTML=html;
-          }
-        }
-      }
+      renderDefectDeptStacked(window._defectDeptCurrentMode);
     }
     const elDefItem=document.getElementById('chartDefectByItem'); 
     if(elDefItem){ 
